@@ -207,6 +207,7 @@
       <button class="btn sec sm" data-adm="credits">+¢500</button>
       <button class="btn sec sm" data-adm="gems">+💎50</button>
       <button class="btn sec sm" data-adm="spore">🦠 Спора-камера</button>
+      <button class="btn sec sm" data-adm="report">📋 Отчёт</button>
     </div>
   </div>
   <!-- ===== /АДМИН ===== -->
@@ -255,8 +256,8 @@
    T3–T4 PWA: манифест + SW-регистрация (файлы sw.js/manifest/icon.svg рядом)
    🦠 Споровая камера-грейбокс (доступ из админки)
    ================================================================ */
-const VER_STR='v0.5.0';
-const SW_CACHE='kosmoferma-v0_5_0';   /* ⚠ бампить КАЖДЫЙ релиз вместе с VER_STR */
+const VER_STR='v0.5.1';
+const SW_CACHE='kosmoferma-v0_5_1';   /* ⚠ бампить КАЖДЫЙ релиз вместе с VER_STR */
 
 /* ================= БАЗОВЫЕ КУЛЬТУРЫ ================= */
 const CROPS=[
@@ -453,6 +454,7 @@ function fresh(){return{
   allowance:BALANCE.offline.startMin*60e3,snd:true,
   own:START_MASK,lastGiftAt:0,maxLvl:1,sawDriftTip:false,jq:0,
   seasonSlime:'',nikoLast:'',
+  firstPlayAt:NOW(),sessions:1,playMs:0,lastSessionDay:dayKey(new Date()),
   mods:{},reactor:0,autoW:false,skinsOwned:['default'],skin:'default',
   hybrids:[],dex:{},stats:{},ach:{},orders:[null,null,null],
   lastDaily:'',streak:0,droneNextG:0,flareUntilG:0,
@@ -519,6 +521,10 @@ function migrateParse(raw){
   s.sawDriftTip=!!s.sawDriftTip;
   if(typeof s.seasonSlime!=='string')s.seasonSlime='';
   if(typeof s.nikoLast!=='string')s.nikoLast='';
+  if(!Number.isFinite(+s.firstPlayAt)||+s.firstPlayAt<=0)s.firstPlayAt=NOW();
+  if(!Number.isInteger(s.sessions)||s.sessions<0)s.sessions=0;
+  if(!Number.isFinite(+s.playMs)||+s.playMs<0)s.playMs=0;
+  if(typeof s.lastSessionDay!=='string')s.lastSessionDay='';
 
   if(typeof s.mods!=='object'||!s.mods)s.mods={};
   Object.keys(s.mods).forEach(k=>{if(!MODS[k])delete s.mods[k]});
@@ -816,7 +822,9 @@ function slimeDroneCheck(){
 setInterval(()=>{
   const pn=performance.now();
   if(document.hidden)return;
-  tickFlareClass();updateJournal();
+    tickFlareClass();updateJournal();
+  {const tk=dayKey(new Date());
+   if(S.lastSessionDay!==tk){S.sessions=(S.sessions||0)+1;S.lastSessionDay=tk}}
   if(S.mods.hangar&&S.gnow>=S.droneNextG){
     S.droneNextG=S.gnow+600e3;
     const sum=harvestAll(true);
@@ -849,6 +857,7 @@ setInterval(()=>{
       return;
     }
     S.gnow+=Math.min(pdt,1000);
+        S.playMs=Math.min((S.playMs||0)+Math.min(pdt,1000),1e12);
     S.allowance=Math.min(capH()*3600e3,
       S.allowance+Math.min(pdt,1000)*BALANCE.offline.mult);
 
@@ -1792,6 +1801,27 @@ addEventListener('error',e=>{if(e.message)toast('🐞 '+e.message,2500)});
 addEventListener('unhandledrejection',e=>toast('🐞 '+((e.reason&&e.reason.message)||e.reason),2500));
 
 /* ================= АДМИН-ОБРАБОТЧИКИ (кнопки 1-в-1) ================= */
+/* ===== Отчёт для разработчиков (тикет 1) ===== */
+function popcount(m){let n=0;while(m){n+=m&1;m>>>=1}return n}
+function devReport(){
+  const mods=Object.keys(S.mods).join(',')||'—';
+  const tasks=JOURNAL.filter(t=>!t.ch).length;
+  const rep=[
+    '🌱 КОСМО-ФЕРМА '+VER_STR,
+    'Уровень: '+effLvl()+' (XP '+S.xp+')',
+    '¢'+fmtN(S.credits)+' · 💎'+fmtN(S.gems),
+    'Клеток: '+popcount(S.own)+'/'+GRID_N+' · Модули: '+mods,
+    'Гибридов: '+S.hybrids.length+'/15 · Журнал: '+(S.jq+1)+'/'+tasks,
+    'Дней в игре: '+(S.sessions||1)+' · Время: '+fmt((S.playMs||0)/1000),
+    'Стрик: '+S.streak+' · Старт: '+(S.firstPlayAt?new Date(S.firstPlayAt).toLocaleDateString():'—'),
+    'Статы: '+JSON.stringify(S.stats),
+  ].join('\n');
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(rep)
+      .then(()=>toast('📋 Отчёт скопирован — отправь разработчикам!',5000))
+      .catch(()=>prompt('Скопируй отчёт вручную:',rep));
+  else prompt('Скопируй отчёт вручную:',rep);
+}
 $('#admToggle').onclick=()=>{
   const b=$('#admBox');
   b.style.display=b.style.display==='none'?'block':'none';
@@ -1834,6 +1864,7 @@ $('#admBox').addEventListener('click',e=>{
   else if(a==='credits'){S.credits+=500;sSell();fx($('#credits'),'+¢500');drawHud();checkAch()}
   else if(a==='gems'){S.gems+=50;sGem();drawHud();checkAch()}
   else if(a==='spore'){spInit();$('#ovlSpore').style.display='flex'}
+    else if(a==='report')return devReport();
   save();
 });
 
@@ -1844,7 +1875,6 @@ if('serviceWorker' in navigator
     navigator.serviceWorker.register('./sw.js').catch(()=>{});
   });
 }
-
 /* ================= BOOT ================= */
 EV.nextPn=performance.now()+BALANCE.events.firstDelaySec*1000;
 fillOrders();
