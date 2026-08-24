@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#241d4e">
-<title>🌱 Космо-Ферма v0.5.0</title>
+<title>🌱 Космо-Ферма v0.7.0</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
@@ -23,6 +23,12 @@
   body.skin-emerald{background:linear-gradient(180deg,#06231c,#0b3a2c 38%,#12503b 72%,#1a6a4d);--accent:#7ee8b0}
   body.skin-dawn{background:linear-gradient(180deg,#3a1530,#5c2148 38%,#7a2f5c 72%,#9c3f74);--accent:#ff9ec4}
   body.skin-circus{background:linear-gradient(180deg,#2a1040,#5c2a1a 40%,#7a3a1a 72%,#8a5a2a);--accent:#ffd166}
+  body.skin-gold{background:linear-gradient(180deg,#3a2c08,#6b4e14 40%,#8a6a1e 72%,#a8842a);--accent:#ffd166}
+  body.skin-crt{background:linear-gradient(180deg,#02120a,#06301a 40%,#0a4a26 72%,#0e5a30);--accent:#7ee8a2}
+  body.skin-crt::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:2;
+    background:repeating-linear-gradient(180deg,rgba(0,0,0,.20) 0 2px,transparent 2px 4px)}
+  body.skin-gagarin{background:linear-gradient(180deg,#081f3a,#0e3a5c 40%,#155a8a 72%,#1a6aa8);--accent:#8ecbff}
+  body.skin-pumpkinN{background:linear-gradient(180deg,#241040,#5c2a10 40%,#7a3a10 72%,#9c5a1a);--accent:#ffb86b}
   #stars{position:fixed;inset:0;pointer-events:none;z-index:0}
   #stars span{position:absolute;color:#fff;animation:tw 3s infinite ease-in-out}
   @keyframes tw{50%{opacity:.1;transform:scale(.6)}}
@@ -44,6 +50,11 @@
   #qbar.ready{border-color:var(--accent);animation:pulse 1.2s infinite alternate}
   #qTxt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.95}
   #qRw{font-weight:800;color:var(--accent);flex-shrink:0}
+  #boostBar{display:none;gap:8px}
+  .bBtn{flex:1;display:flex;align-items:center;gap:7px;background:#4a4370;border:2px solid #ffd16666;
+    border-radius:13px;padding:8px 10px;color:var(--text);font-family:inherit;font-size:12px;
+    font-weight:700;cursor:pointer;user-select:none;-webkit-user-select:none}
+  .bBtn:active{transform:scale(.97)}
   #grid{flex:1;display:grid;grid-template-columns:repeat(var(--cols,3),1fr);grid-auto-rows:1fr;
     gap:7px;align-content:center}
   .cell{position:relative;background:#ffffff14;border:2px solid #ffffff22;border-radius:15px;
@@ -56,6 +67,8 @@
   .cell.growing{background:#7ebeff2b;border-color:#7ecbff55}
   .cell.growing.w{background:#7ee8a21f;border-color:#7ee8a255}
   .cell.ready{background:#ffb86b3d;border-color:var(--accent);animation:pulse 1s infinite alternate}
+  .cell.gold{border-color:#ffd166;box-shadow:0 0 16px #ffd16677;animation:goldP 1s infinite alternate}
+  @keyframes goldP{to{transform:scale(1.04);box-shadow:0 0 26px #ffd166aa}}
   .cell.linked{opacity:.55;background:#ffffff0d}
   .cell.locked{background:#ffffff08;border-style:dashed;border-color:#ffffff20}
   .cell.slimed{background:#7ee8a235;border-color:#7ee8a2aa}
@@ -72,9 +85,14 @@
   .ping{position:absolute;inset:18%;border:3px solid var(--accent);border-radius:50%;
     pointer-events:none;animation:pingA .5s ease-out forwards}
   @keyframes pingA{to{transform:scale(1.9);opacity:0}}
-  #footer{display:flex;align-items:center;gap:5px;background:var(--panel);
+  #decor{position:absolute;left:16px;bottom:74px;font-size:20px;pointer-events:none;z-index:2;
+    text-shadow:0 2px 6px #000b;letter-spacing:5px}
+  #mailBtn{display:none;position:absolute;top:6px;right:6px;z-index:30;
+    font-size:18px;background:var(--panel);border:1px solid #ffd16688;border-radius:12px;
+    padding:6px 9px;cursor:pointer}
+  #footer{display:flex;align-items:center;gap:4px;background:var(--panel);
     border-radius:16px;padding:8px 9px}
-  #inv{flex:1;min-width:0;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.9}
+  #inv{flex:1;min-width:0;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.9}
   .btn{border:none;border-radius:13px;padding:11px 10px;font-size:13.5px;font-weight:800;cursor:pointer;
     color:#4a2c00;background:linear-gradient(180deg,#ffd28f,#ffab5e);box-shadow:0 3px 0 #d9843f;
     transition:transform .06s,box-shadow .06s;font-family:inherit}
@@ -95,12 +113,24 @@
   .row .em{font-size:27px;flex-shrink:0}
   .row .meta{flex:1;font-size:12px;line-height:1.4;opacity:.93;min-width:0}
   .row.locked{opacity:.42}
+  .row.done{opacity:.6}
   .sw{width:32px;height:32px;border-radius:10px;display:inline-block;border:2px solid #ffffff33;flex-shrink:0}
-  .tabs{display:flex;gap:4px;margin-bottom:10px}
-  .tab{flex:1;padding:8px 2px;border-radius:11px;background:#ffffff14;border:none;color:var(--text);
-    font-weight:700;cursor:pointer;font-size:11px;font-family:inherit}
-  .tab.act{background:var(--accent);color:#4a2c00}
-  .tabPage{display:none}.tabPage.act{display:block}
+  .hub{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .hcard{position:relative;background:var(--panel2);border:2px solid #ffffff22;
+    border-radius:16px;padding:12px 10px;cursor:pointer;min-height:84px}
+  .hcard:active{transform:scale(.97)}
+  .hcard .em{font-size:32px}
+  .hcard .t{font-weight:800;font-size:13px;margin-top:4px}
+  .hcard .s{font-size:10.5px;opacity:.65}
+  .hbadge{position:absolute;top:8px;right:8px;background:var(--accent);color:#4a2c00;
+    font-size:10px;font-weight:800;border-radius:8px;padding:2px 6px}
+  #ovlStation .sheet{width:min(440px,96vw);max-height:92dvh}
+  .backBtn{background:none;border:none;color:var(--accent);font-weight:800;font-size:13px;
+    cursor:pointer;font-family:inherit;padding:6px 0;margin-bottom:8px}
+  .spRes{text-align:center;padding:10px 0}
+  .spStars{font-size:34px;letter-spacing:6px;margin:8px 0}
+  .spStars span{opacity:.15;transition:opacity .3s}
+  .spStars span.on{opacity:1;text-shadow:0 0 18px #ffd166}
   #meteorLayer{position:fixed;inset:0;pointer-events:none;z-index:56;overflow:hidden}
   .meteor{position:absolute;font-size:27px;pointer-events:auto;cursor:pointer;z-index:57;
     filter:drop-shadow(0 0 8px #ffd16699);animation-name:mfall;animation-timing-function:linear;
@@ -125,14 +155,18 @@
   #toast{position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:60;display:none;
     background:#000000c4;padding:10px 15px;border-radius:14px;font-size:13px;
     max-width:88%;text-align:center;line-height:1.4;pointer-events:none;white-space:pre-line}
-  /* 🦠 Споровая камера (грейбокс) */
-  #spStats{text-align:center;font-size:13px;margin-bottom:8px}
-  #spGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:10px}
-  .spC{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:clamp(20px,6vw,28px);
-    background:#ffffff14;border:2px solid #ffffff22;border-radius:12px;cursor:pointer;
-    user-select:none;-webkit-user-select:none}
+  #spStats{text-align:center;font-size:12.5px;margin-bottom:8px;line-height:1.45}
+  #spGrid{display:grid;gap:5px;margin-bottom:10px}
+  .spC{aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+    font-size:clamp(18px,5.5vw,26px);background:#ffffff14;border:2px solid #ffffff22;border-radius:10px;
+    cursor:pointer;user-select:none;-webkit-user-select:none;position:relative}
   .spC.sel{border-color:var(--accent);background:#ffb86b33}
-  .spC:active{transform:scale(.94)}
+  .spC.ice::after{content:'';position:absolute;inset:0;border-radius:8px;
+    background:rgba(160,220,255,.35);border:2px solid #bde4ff88}
+  .spC.cap{background:#8a5a2a55;border-color:#c9805a99}
+  .spC.sl::before{content:'👾';position:absolute;top:-4px;right:-2px;font-size:14px}
+  .spC.nest::before{content:'🪺';position:absolute;top:-4px;right:-2px;font-size:14px}
+  .spMap{display:flex;flex-direction:column;gap:6px}
 </style>
 </head>
 <body>
@@ -140,17 +174,25 @@
 <div id="flareFx"></div>
 <div id="app">
   <div id="hud">
-    <div id="logo">🌱 КОСМО-ФЕРМА<br><span style="font-size:9.5px;opacity:.7">StarSprout · v0.5.0</span></div>
+    <div id="logo">🌱 КОСМО-ФЕРМА<br><span id="subLine" style="font-size:9.5px;opacity:.7">StarSprout · v0.7.0</span></div>
     <div id="wallet"><div id="credits">¢ 50</div><div id="gems">💎 0</div></div>
     <div id="lvlwrap"><div id="lvl">Ур. 1</div><div id="xpbar"><i style="width:0%"></i></div></div>
   </div>
   <div id="qbar"><span>🤖</span><span id="qTxt">Загрузка журнала…</span><span id="qRw"></span></div>
+  <div id="boostBar">
+    <button class="bBtn" id="bThermos">☕ Термос <span id="bThermosN"></span></button>
+    <button class="bBtn" id="bWater">💧 Бустер <span id="bWaterN"></span></button>
+    <button class="bBtn" id="bSeed">🌟 Семя <span id="bSeedN"></span></button>
+  </div>
   <div id="grid"></div>
+  <div id="decor"></div>
+  <button id="mailBtn">📮</button>
   <div id="footer">
     <div id="inv">Склад пуст</div>
     <button class="btn sm" id="allBtn">🧺</button>
     <button class="btn sm" id="sellBtn">💰</button>
     <button class="btn sm" id="ordBtn">📋</button>
+    <button class="btn sm" id="wkBtn">🗓</button>
     <button class="btn sec sm" id="stBtn">🛰</button>
     <button class="btn sec sm" id="menuBtn">⚙</button>
   </div>
@@ -167,17 +209,25 @@
     слоты обновляются раз в час · бонус к цене вместо «продать всё»</p>
 </div></div>
 
+<div class="ovl" id="ovlWeek"><div class="sheet">
+  <button class="xbtn" id="closeWeek">✕</button><h3>🗓 Недельный отчёт ФЛОРЫ</h3>
+  <div id="wkList"></div>
+  <div id="wkChests" style="margin-top:10px"></div>
+  <p style="text-align:center;opacity:.5;font-size:11px;margin-top:6px">
+    задачи и сундуки обновляются в понедельник</p>
+</div></div>
+
 <div class="ovl" id="ovlStation"><div class="sheet">
-  <button class="xbtn" id="closeStation">✕</button><h3>🛰 Станция</h3>
-  <div class="tabs">
-    <button class="tab act" data-t="mods">Модули</button><button class="tab" data-t="upg">Улучши</button>
-    <button class="tab" data-t="lab">🧬 Лаба</button><button class="tab" data-t="skins">Космос</button>
-    <button class="tab" data-t="dex">Коллекция</button><button class="tab" data-t="ach">Награды</button>
+  <button class="xbtn" id="closeStation">✕</button><h3>🛰 Станция «Заря-9»</h3>
+  <button class="backBtn" id="stBack" style="display:none">← Станция</button>
+  <div id="stHub" class="hub"></div>
+  <div id="stView" style="display:none">
+    <div class="tabPage act" id="tp-mods"></div><div class="tabPage" id="tp-upg"></div>
+    <div class="tabPage" id="tp-lab"></div>
+    <div class="tabPage" id="tp-shop"></div>
+    <div class="tabPage" id="tp-dex"></div>
+    <div class="tabPage" id="tp-ach"></div>
   </div>
-  <div class="tabPage act" id="tp-mods"></div><div class="tabPage" id="tp-upg"></div>
-  <div class="tabPage" id="tp-lab"></div>
-  <div class="tabPage" id="tp-skins"></div><div class="tabPage" id="tp-dex"></div>
-  <div class="tabPage" id="tp-ach"></div>
 </div></div>
 
 <div class="ovl" id="ovlSet"><div class="sheet">
@@ -189,12 +239,12 @@
   <div class="row click" id="expRow"><div class="em">📤</div>
     <div class="meta"><b>Экспорт сейва</b><br>код фермы — в буфер обмена</div></div>
   <div class="row click" id="impRow"><div class="em">📥</div>
-    <div class="meta"><b>Импорт сейва</b><br>вставь код фермы (перенос на другое устройство)</div></div>
+    <div class="meta"><b>Импорт сейва</b><br>вставь код фермы (перенос устройства)</div></div>
   <div class="row click" id="wipeRow"><div class="em">🗑</div>
     <div class="meta"><b>Сбросить прогресс</b><br>ферма удалится без возможности возврата</div></div>
-  <!-- ===== АДМИН: скрыт по умолчанию; вход — 7 тапов по версии или ?dev=1 ===== -->
+  <!-- ===== АДМИН: скрыт; вход — 7 тапов по версии или ?dev=1 ===== -->
   <div class="row click" id="admToggle" style="display:none"><div class="em">🛠</div>
-    <div class="meta"><b>Админ-панель</b><br>события, читы, споровая камера</div></div>
+    <div class="meta"><b>Админ-панель</b><br>события, читы, отчёт</div></div>
   <div id="admBox" style="display:none">
     <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:8px 0">
       <button class="btn sm" data-adm="flare">☀️ Вспышка</button>
@@ -204,9 +254,12 @@
       <button class="btn sm" data-adm="drift">🌀 Дрейф</button>
       <button class="btn sm" data-adm="skip">⏩ +1 час</button>
       <button class="btn sm" data-adm="ready">✅ Всё созрело</button>
+      <button class="btn sm" data-adm="gold">✨ Золотой росток</button>
+      <button class="btn sm" data-adm="exp">🧪 Эксперимент</button>
+      <button class="btn sm" data-adm="mail">📬 Письмо (тест)</button>
       <button class="btn sec sm" data-adm="credits">+¢500</button>
       <button class="btn sec sm" data-adm="gems">+💎50</button>
-      <button class="btn sec sm" data-adm="spore">🦠 Спора-камера</button>
+      <button class="btn sec sm" data-adm="dust">+🧪100</button>
       <button class="btn sec sm" data-adm="report">📋 Отчёт</button>
     </div>
   </div>
@@ -230,34 +283,42 @@
   </div>
 </div></div>
 
-<!-- 🦠 Споровая камера: грейбокс, доступ только из админки -->
 <div class="ovl" id="ovlSpore"><div class="sheet">
-  <button class="xbtn" id="closeSpore">✕</button><h3>🦠 Споровая камера · ГРЕЙБОКС</h3>
-  <div id="spStats"></div>
-  <div id="spGrid"></div>
-  <div style="display:flex;gap:8px;justify-content:center">
-    <button class="btn sm" id="spRestart">↻ Заново</button>
+  <button class="xbtn" id="closeSpore">✕</button>
+  <h3>🦠 Споровая камера · <span id="spTitle">Сектор 1</span></h3>
+  <div id="spMap" class="spMap"></div>
+  <div id="spPlay" style="display:none">
+    <div id="spStats"></div>
+    <div id="spGrid"></div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn sm" id="spMapBtn">🗺 Карта</button>
+      <button class="btn sm" id="spRestart">↻ Заново</button>
+    </div>
   </div>
-  <p style="text-align:center;opacity:.5;font-size:11px;margin-top:8px">
-    ядро match-3 v0.1: тапни две соседние споры · цель — очки за ходы ·
-    награды и арт придут в v0.6</p>
+  <p style="text-align:center;opacity:.5;font-size:10.5px;margin-top:8px">
+    лёд колется матчем · капсулы — соседним матчем · слизень давится рядом ·
+    гнёзда плодят слизней — ломай матчем · 🧪 эксперимент дня одинаковый у всех</p>
+</div></div>
+
+<div class="ovl" id="ovlMail"><div class="sheet">
+  <button class="xbtn" id="closeMail">✕</button><h3>📬 Письма с Земли</h3>
+  <div id="mailList"></div>
 </div></div>
 
 <div id="meteorLayer"></div>
 <div id="lvlOvl"><div id="lvlCard"></div></div>
 <div id="toast"></div>
 
+<script src="texts.js"></script>
 <script>
 'use strict';
 /* ================================================================
-   КОСМО-ФЕРМА v0.5.0 «В свет»
-   T1 админка скрыта (7 тапов по версии / ?dev=1)
-   T2 экспорт/импорт сейва (валидация через migrateParse)
-   T3–T4 PWA: манифест + SW-регистрация (файлы sw.js/manifest/icon.svg рядом)
-   🦠 Споровая камера-грейбокс (доступ из админки)
+   КОСМО-ФЕРМА v0.7.0
+   Новое: Сектор 2 «Пустоши» (13–24, гнёзда, босс «Матка»),
+   📬 Письма с Земли (день 2/4/7/14/30), все тексты в texts.js.
    ================================================================ */
-const VER_STR='v0.5.1';
-const SW_CACHE='kosmoferma-v0_5_1';   /* ⚠ бампить КАЖДЫЙ релиз вместе с VER_STR */
+const VER_STR='v0.7.0';
+const SW_CACHE='kosmoferma-v0_7_0';
 
 /* ================= БАЗОВЫЕ КУЛЬТУРЫ ================= */
 const CROPS=[
@@ -299,14 +360,16 @@ const HYBS={};
 })();
 const DEF_OF=id=>BY_ID[id]||HYBS[id];
 
-/* ================= ПОРОГИ / МОДУЛИ / УЛУЧШЕНИЯ / СКИНЫ ================= */
+/* ================= ПОРОГИ / МОДУЛИ / СКИНЫ / ДЕКОР / НИКО / СЕЗОНЫ ===== */
 const TH=[0,80,450,1400,3600,9000];
 const LEGACY_TH=[0,80,300,900,2600,6500];
+const RANK_NAMES=['','Серебряный фермер','Золотой','Платиновый','Алмазный','Легенда орбиты'];
 const MODS={
  orders:{em:'🏠',name:'Жилой отсек',desc:'Заказы с Земли: ¢-бонус за выборочную продажу',cost:60,lvl:2},
  observ:{em:'🔭',name:'Обсерватория',desc:'Кнопка «призвать событие» + 💎×2 с метеоров + события чаще',cost:150,lvl:3},
  hangar:{em:'🛰',name:'Ангар',desc:'Дрон: автосбор раз в 10 мин, сам гоняет слизней',cost:500,lvl:4},
  lab:{em:'🧬',name:'Лаборатория',desc:'Скрещивание: 15 гибридов из 6 базовых культур',cost:600,lvl:5},
+ spore:{em:'🦠',name:'Споровая камера',desc:'Кампания мутагенов: секторы, боссы, ∞. Пыль — в Лабораторию',cost:800,lvl:4},
 };
 const REACTOR_COST=[15,20,25,30];
 const AUTOW_COST=35;
@@ -316,16 +379,44 @@ const SKINS=[
  {id:'emerald',name:'💚 Изумрудная орбита',cost:40,css:'linear-gradient(180deg,#0b3a2c,#1a6a4d)'},
  {id:'dawn',name:'🍑 Розенный рассвет',cost:40,css:'linear-gradient(180deg,#5c2148,#9c3f74)'},
  {id:'circus',name:'🎩 Карнавальный купол',cost:0,special:true,css:'linear-gradient(180deg,#5c2a1a,#8a5a2a)'},
+ {id:'gold',name:'🖼 Золотой лист',cost:5000,cur:'c',css:'linear-gradient(180deg,#3a2c08,#a8842a)'},
+ {id:'crt',name:'📺 Ретро-ЭЛТ',cost:12000,cur:'c',css:'linear-gradient(180deg,#06301a,#0e5a30)'},
+ {id:'gagarin',name:'🚀 Гагаринский купол',cost:0,seasonal:'cosmos',css:'linear-gradient(180deg,#081f3a,#1a6aa8)'},
+ {id:'pumpkinN',name:'🎃 Тыквенная туманность',cost:0,seasonal:'hallow',css:'linear-gradient(180deg,#241040,#9c5a1a)'},
 ];
 const PHOTO_BG={default:['#241d4e','#4b3670'],nebula:['#3d1a5c','#6b2f8f'],
-  emerald:['#0b3a2c','#1a6a4d'],dawn:['#5c2148','#9c3f74'],circus:['#3a1a4a','#7a4a2a']};
-const NIKO_OFFERS=[
- {give:{id:'pumpkin',n:3},g:2},
- {give:{id:'berry',n:5},c:40,g:1},
- {give:{id:'corn',n:2},g:1,c:30},
- {give:{id:'carrot',n:8},c:25},
- {give:{id:'lotus',n:1},g:5},
+  emerald:['#0b3a2c','#1a6a4d'],dawn:['#5c2148','#9c3f74'],circus:['#3a1a4a','#7a4a2a'],
+  gold:['#4a3a10','#a8842a'],crt:['#031a0c','#0e5a30'],
+  gagarin:['#081f3a','#1a6aa8'],pumpkinN:['#241040','#9c5a1a']};
+const DECOR=[
+ {id:'gnome',em:'🧙',name:'Гномон-космонавт',cost:1500},
+ {id:'flag',em:'🚩',name:'Флаг станции',cost:4000},
+ {id:'aqua',em:'🐠',name:'Аквариум со слизнем',cost:9000},
 ];
+const PLAQUE_COST=10000;
+const NIKO_OFFERS=[
+ {give:[{id:'onion',n:5}],g:3},
+ {give:[{id:'lotus',n:1}],g:8},
+ {give:[{id:'onion',n:4}],c:200},
+ {give:[{id:'berry',n:6}],g:4},
+ {give:[{id:'pumpkin',n:2}],g:5},
+ {give:[{id:'corn',n:10}],g:6},
+ {give:[{id:'pumpkin',n:3}],c:300,g:1},
+ {give:[{id:'carrot',n:20}],g:2},
+ {give:[{id:'berry',n:8}],c:150,g:2},
+ {give:[{id:'pumpkin',n:1},{id:'carrot',n:5}],g:3},
+ {give:[{id:'onion',n:2},{id:'berry',n:2}],g:3},
+ {give:[{id:'lotus',n:1},{id:'corn',n:3}],g:10},
+];
+const SEASONS=[
+ {id:'cosmos',from:'04-10',to:'04-19',em:'🚀',name:'День космонавтики',meteorX2:true,skin:'gagarin',slimeHat:'🪐'},
+ {id:'hallow',from:'10-25',to:'11-07',em:'🎃',name:'Хэллоуин',skin:'pumpkinN',slimeHat:'🎃'},
+ {id:'ny',from:'12-20',to:'01-07',em:'🎄',name:'Новогодняя станция',dailyX2:true,slimeHat:'🎅'},
+];
+function seasonNow(){
+  const d=new Date(),md=String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  return SEASONS.find(s=>s.from<=s.to?(md>=s.from&&md<=s.to):(md>=s.from||md<=s.to))||null;
+}
 const st=k=>(S.stats&&S.stats[k])||0;
 const ACH=[
  {id:'h1',   em:'🌱',name:'Первый урожай',  desc:'Собери 1 растение',            gems:2, cond:()=>st('harvested')>=1},
@@ -341,6 +432,22 @@ const ACH=[
  {id:'cells',em:'🏗',name:'Застройщик',       desc:'Выкупи всю теплицу (18 клеток)',gems:10,cond:()=>S.own===ALL_MASK},
  {id:'ord',  em:'📋',name:'Снабженец',       desc:'Выполни 30 заказов',           gems:8, cond:()=>st('ordersDone')>=30},
  {id:'week', em:'📅',name:'Верный фермер',   desc:'Заходи 7 дней подряд',         gems:10,cond:()=>S.streak>=7},
+ {id:'mil',  em:'💰',name:'Миллионер',       desc:'Имей 10 000¢ одновременно',    gems:15,cond:()=>S.credits>=10000},
+ {id:'sl25', em:'👾',name:'Слизневод',       desc:'Прогони 25 слизней',           gems:8, cond:()=>st('slimes')>=25},
+ {id:'snip', em:'⚡',name:'Снайпер',         desc:'3 идеальные стыковки подряд',  gems:5, cond:()=>(S.quickStreak||0)>=3},
+ {id:'fash', em:'🎨',name:'Модник',          desc:'Собери все скины',             gems:10,cond:()=>SKINS.every(s=>S.skinsOwned.includes(s.id))},
+ {id:'niko10',em:'🛰',name:'Друг НИКО',      desc:'Соверши 10 сделок с НИКО',     gems:5, cond:()=>(S.nikoCount||0)>=10},
+ {id:'photo3',em:'📸',name:'Хроникёр',       desc:'Сделай 3 открытки купола',     gems:3, cond:()=>(S.photos||0)>=3},
+ {id:'sold100',em:'🛒',name:'Торговец года', desc:'Продай на 100K¢ суммарно',     gems:12,cond:()=>st('sold')>=100000},
+ {id:'gold1', em:'✨',name:'Алхимик',         desc:'Поймай первого золотого ростка',gems:5, cond:()=>(S.goldCaught||0)>=1},
+ {id:'gold10',em:'🌟',name:'Золотая жила',    desc:'Поймай 10 золотых ростков',    gems:10,cond:()=>(S.goldCaught||0)>=10},
+ {id:'exp7',  em:'🧪',name:'Лаборант',        desc:'Стрик эксперимента дня: 7',    gems:15,cond:()=>((S.spore.exp&&S.spore.exp.streak)||0)>=7},
+ {id:'wk1',   em:'🥉',name:'Первая сдача',    desc:'Открой любой недельный сундук',gems:5, cond:()=>(S.wkOpenedTotal||0)>=1},
+ {id:'wk10',  em:'📦',name:'Завхоз',          desc:'Открой 10 недельных сундуков', gems:10,cond:()=>(S.wkOpenedTotal||0)>=10},
+ {id:'str5',  em:'✨🧬',name:'Идеальный штамм',desc:'Выведи гибрид со штаммом 5★', gems:20,cond:()=>Object.values(S.strains||{}).some(x=>x.stars===5)},
+ {id:'arch',  em:'📜',name:'Хранитель',       desc:'Прочитай все архивы ФЛОРЫ',    gems:15,cond:()=>(S.storySpore||[]).length>=4},
+ {id:'mail5', em:'📬',name:'Адресат',         desc:'Прочитай 5 писем с Земли',     gems:10,cond:()=>(S.letters||[]).length>=5},
+ {id:'s2',    em:'🏜',name:'Пустынник',       desc:'Пройди уровень 13',            gems:8, cond:()=>(S.spore.stars[13]||0)>0},
 ];
 const DAILY=[{c:25},{c:40},{g:3},{c:80},{g:5},{c:150},{g:10}];
 
@@ -356,6 +463,11 @@ const BALANCE={
           meteorCount:7,meteorSpreadMs:5200,meteorLifeMs:10800,
           slimeHp:3,slimeDroneSec:25,slimePay:2,evFailCdSec:30,seasonDays:3,seasonGems:5},
   lotusGemChance:.2,orderGemChance:.3,
+  rankStepXp:50000,rankMax:5,
+  goldChance:.15,goldGems:[1,3],
+  expGems:3,expStreakBonus:15,
+  dustFirst:[10,15],dustBoss:50,dustRepeat:[3,5],catalystCost:30,
+  nestSpawnCap:5,
 };
 const GRID_N=BALANCE.cols*BALANCE.rows;
 const START_MASK=(1<<BALANCE.START_CELLS)-1,ALL_MASK=(1<<GRID_N)-1;
@@ -410,6 +522,9 @@ function confirmP(msg){
   return res;
 }
 const dayKey=d=>d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+const weekKey=()=>{const d=new Date();
+  const t=new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()+6)%7));
+  return t.getFullYear()+'-'+(t.getMonth()+1)+'-'+t.getDate()};
 
 /* ================= ЗВУК ================= */
 let AC=null;
@@ -447,7 +562,7 @@ const sFlare=()=>{beep(440,.12,'sine',.09);beep(660,.12,'sine',.09,.1);beep(880,
 const sThud =()=>beep(180,.1,'square',.06);
 
 /* ================= СОСТОЯНИЕ ================= */
-const KEY='starsprout_save',KEY_BAK='starsprout_bak',VER=9;
+const KEY='starsprout_save',KEY_BAK='starsprout_bak',VER=14;
 const PLOT_DEF={cropId:null,plantedAt:0,growT:0,boost:0,watered:false,occBy:null};
 function fresh(){return{
   v:VER,credits:50,xp:0,gems:0,gnow:NOW(),lastSeen:NOW(),
@@ -455,6 +570,12 @@ function fresh(){return{
   own:START_MASK,lastGiftAt:0,maxLvl:1,sawDriftTip:false,jq:0,
   seasonSlime:'',nikoLast:'',
   firstPlayAt:NOW(),sessions:1,playMs:0,lastSessionDay:dayKey(new Date()),
+  farmName:'',decorOwned:[],nikoCount:0,photos:0,quickStreak:0,
+  spore:{lvl:1,stars:{},dust:0,exp:{last:'',streak:0}},
+  strains:{},storySpore:[],sawSpiralTip:0,expDone:0,letters:[],
+  goldCaught:0,goldRolled:false,
+  wkKey:'',wkTasks:[],wkProg:{},wkOpened:{},wkOpenedTotal:0,
+  boosters:{thermos:0,water:0,seed:0},
   mods:{},reactor:0,autoW:false,skinsOwned:['default'],skin:'default',
   hybrids:[],dex:{},stats:{},ach:{},orders:[null,null,null],
   lastDaily:'',streak:0,droneNextG:0,flareUntilG:0,
@@ -521,16 +642,53 @@ function migrateParse(raw){
   s.sawDriftTip=!!s.sawDriftTip;
   if(typeof s.seasonSlime!=='string')s.seasonSlime='';
   if(typeof s.nikoLast!=='string')s.nikoLast='';
+
   if(!Number.isFinite(+s.firstPlayAt)||+s.firstPlayAt<=0)s.firstPlayAt=NOW();
   if(!Number.isInteger(s.sessions)||s.sessions<0)s.sessions=0;
   if(!Number.isFinite(+s.playMs)||+s.playMs<0)s.playMs=0;
   if(typeof s.lastSessionDay!=='string')s.lastSessionDay='';
+  if(typeof s.farmName!=='string')s.farmName='';
+  if(!Array.isArray(s.decorOwned))s.decorOwned=[];
+  s.decorOwned=[...new Set(s.decorOwned.filter(id=>DECOR.some(d=>d.id===id)))];
+  if(!Number.isInteger(s.nikoCount)||s.nikoCount<0)s.nikoCount=0;
+  if(!Number.isInteger(s.photos)||s.photos<0)s.photos=0;
+  if(!Number.isInteger(s.quickStreak)||s.quickStreak<0)s.quickStreak=0;
+  if(typeof s.spore!=='object'||!s.spore)s.spore={lvl:1,stars:{},dust:0,exp:{last:'',streak:0}};
+  if(!Number.isInteger(s.spore.lvl)||s.spore.lvl<1)s.spore.lvl=1;
+  if(typeof s.spore.stars!=='object'||!s.spore.stars)s.spore.stars={};
+  if(!Number.isInteger(s.spore.dust)||s.spore.dust<0)s.spore.dust=0;
+  if(typeof s.spore.exp!=='object'||!s.spore.exp)s.spore.exp={last:'',streak:0};
+  if(typeof s.spore.exp.last!=='string')s.spore.exp.last='';
+  if(!Number.isInteger(s.spore.exp.streak)||s.spore.exp.streak<0)s.spore.exp.streak=0;
+  if(typeof s.strains!=='object'||!s.strains)s.strains={};
+  Object.keys(s.strains).forEach(k=>{
+    const v=s.strains[k];
+    if(!HYBS[k]||typeof v!=='object'||!Number.isInteger(v.stars)||v.stars<0||v.stars>5)
+      delete s.strains[k];
+    else v.bonus=Math.max(-.2,Math.min(.2,+v.bonus||0));
+  });
+  if(!Array.isArray(s.storySpore))s.storySpore=[];
+  s.storySpore=s.storySpore.filter(x=>Object.keys(TEXTS.story).includes(x));
+  if(!Number.isInteger(s.sawSpiralTip))s.sawSpiralTip=0;
+  if(!Number.isInteger(s.expDone)||s.expDone<0)s.expDone=0;
+  if(!Array.isArray(s.letters))s.letters=[];
+  s.letters=s.letters.filter(id=>TEXTS.letters.some(l=>l.id===id));
+  if(!Number.isInteger(s.goldCaught)||s.goldCaught<0)s.goldCaught=0;
+  s.goldRolled=!!s.goldRolled;
+  if(typeof s.wkKey!=='string')s.wkKey='';
+  if(!Array.isArray(s.wkTasks))s.wkTasks=[];
+  if(typeof s.wkProg!=='object'||!s.wkProg)s.wkProg={};
+  if(typeof s.wkOpened!=='object'||!s.wkOpened)s.wkOpened={};
+  if(!Number.isInteger(s.wkOpenedTotal)||s.wkOpenedTotal<0)s.wkOpenedTotal=0;
+  if(typeof s.boosters!=='object'||!s.boosters)s.boosters={thermos:0,water:0,seed:0};
+  ['thermos','water','seed'].forEach(k=>{
+    s.boosters[k]=Math.max(0,Math.min(Math.floor(+s.boosters[k]||0),99))});
 
   if(typeof s.mods!=='object'||!s.mods)s.mods={};
   Object.keys(s.mods).forEach(k=>{if(!MODS[k])delete s.mods[k]});
   s.autoW=!!s.autoW;
   if(!Array.isArray(s.skinsOwned))s.skinsOwned=['default'];
-  s.skinsOwned=['default',...s.skinsOwned.filter(x=>SKINS.some(k=>k.id===x&&x!=='default'))];
+  s.skinsOwned=['default',...new Set(s.skinsOwned.filter(x=>SKINS.some(k=>k.id===x&&x!=='default')))];
   if(!SKINS.some(k=>k.id===s.skin&&s.skinsOwned.includes(s.skin)))s.skin='default';
   if(!Array.isArray(s.hybrids))s.hybrids=[];
   s.hybrids=[...new Set(s.hybrids.filter(id=>HYBS[id]))];
@@ -595,8 +753,11 @@ let S=null,wiping=false,saveFailShown=false,saveCount=0;
 const owned=i=>hasBit(S.own,i);
 const effLvl=()=>{const l=lvlOf(S.xp);if(l>S.maxLvl)S.maxLvl=l;return S.maxLvl};
 const capH=()=>BALANCE.offline.baseCapH+2*S.reactor;
+const rankOf=()=>S.xp>TH[TH.length-1]
+  ?Math.min(BALANCE.rankMax,Math.floor((S.xp-TH[TH.length-1])/BALANCE.rankStepXp)):0;
+const rankBonus=()=>Math.min(rankOf(),5)*.01;
 
-/* ================= T2: ЭКСПОРТ / ИМПОРТ СЕЙВА ================= */
+/* ================= ЭКСПОРТ / ИМПОРТ СЕЙВА ================= */
 function exportSave(){
   try{
     const b64=btoa(unescape(encodeURIComponent(JSON.stringify(S))));
@@ -611,12 +772,10 @@ function importSave(){
   const code=prompt('Вставь код фермы (из экспорта):');
   if(!code)return;
   let s=null;
-  try{
-    s=migrateParse(decodeURIComponent(escape(atob(code.trim()))));
-  }catch(e){s=null}
+  try{s=migrateParse(decodeURIComponent(escape(atob(code.trim()))))}catch(e){s=null}
   if(!s)return fail('❌ Код не распознан — проверь и вставь целиком');
   if(!confirmP('Ферма из кода ЗАМЕНИТ текущую.\nТекущий прогресс можно сначала выгрузить через 📤. Продолжить?'))return;
-  wiping=true;                                   /* pagehide не перезапишет */
+  wiping=true;
   try{
     localStorage.setItem(KEY,JSON.stringify(s));
     localStorage.setItem(KEY_BAK,JSON.stringify(s));
@@ -626,6 +785,7 @@ function importSave(){
 $('#expRow').onclick=exportSave;
 $('#impRow').onclick=importSave;
 
+/* ===== МАРКЕР: КОНЕЦ ЧАСТИ 1 — продолжай частью 2 ===== */
 /* ================= ЗАКАЗЫ ================= */
 function newOrder(){
   const pool=CROPS.filter(c=>c.lvl<=effLvl());
@@ -663,7 +823,6 @@ function save(){
   }
 }
 setInterval(()=>{save();checkSoftlock()},BALANCE.autosaveSec*1000);
-addEventListener('pagehide',save);
 
 /* ================= ВРЕМЯ / ОФФЛАЙН ================= */
 function grantOffline(ms){
@@ -673,21 +832,29 @@ function grantOffline(ms){
   return{away,granted};
 }
 const hasGrowing=()=>S.plots.some(p=>p.cropId);
+function countReady(){
+  const byId={};
+  S.plots.forEach(p=>{if(p.cropId&&prog(p)>=1)byId[p.cropId]=(byId[p.cropId]||0)+1});
+  return byId;
+}
 function offlineToast(r){
   if(!hasGrowing())return;
+  const byId=countReady();
+  const parts=Object.entries(byId).map(([id,n])=>n+DEF_OF(id).em);
   if(r.granted<=0){
     toast(`🌌 Вас не было ${fmt(r.away)}\n⏳ офлайн-бюджет на нуле — поиграй немного,\nи время снова начнёт копиться`,5500);return}
-  const cut=r.granted<r.away;
-  toast(`🌌 Вас не было ${fmt(r.away)} · учтено ${fmt(r.granted)}`+
-    (cut?' (бюджет копится во время игры)':'')+
-    '\nрастения продолжали расти!',5000);
+  if(parts.length){
+    toast(`🌌 Тебя не было ${fmt(r.away)} · учтено ${fmt(r.granted)}\n🧺 Созрело и ждёт: ${parts.join(' ')}${r.granted<r.away?'\n(бюджет копится во время игры)':''}`,5500);
+  }else{
+    toast(`🌌 Тебя не было ${fmt(r.away)} · учтено ${fmt(r.granted)}\n🌱 растения продолжали расти!`,5000);
+  }
 }
 let lastPn=performance.now(),lastWall=NOW(),hideAt=null;
 
 /* ================= ДРЕЙФ ================= */
 const DR={on:false,idx:-1,phase:'',startPn:0,deadline:0,frozenEff:0,pinged:false,last:-1,nextAt:0};
 let ovlPausePn=0;
-const ovlOpen=()=>['#ovlSeeds','#ovlOrders','#ovlStation','#ovlSet','#ovlJournal','#ovlPhoto','#ovlSpore']
+const ovlOpen=()=>['#ovlSeeds','#ovlOrders','#ovlStation','#ovlSet','#ovlJournal','#ovlPhoto','#ovlSpore','#ovlWeek','#ovlMail']
   .some(q=>$(q).style.display==='flex');
 
 function driftCandidates(){const out=[];
@@ -718,6 +885,7 @@ function dockDrift(){
   const quick=DR.phase==='drift'
     &&(performance.now()-DR.startPn)<=BALANCE.drift.quickDockSec*1000;
   DR.last=DR.idx;DR.on=false;S.stats.docked++;
+  S.quickStreak=quick?(S.quickStreak||0)+1:0;
   if(quick){sQuick();fx(cells[DR.idx],'⚡');toast('⚡ Идеальная стыковка!',2200);ping(cells[DR.idx])}
   else sDock();
   checkAch();drawCells();save()}
@@ -760,7 +928,7 @@ function startMeteor(){
     el.style.animationDuration=((rnd(30,44))/10).toFixed(1)+'s';
     el.addEventListener('pointerdown',e=>{
       e.stopPropagation();
-      const gain=rnd(1,2)*(S.mods.observ?2:1);
+      const gain=rnd(1,2)*(S.mods.observ?2:1)*(seasonNow()?.meteorX2?2:1);
       S.gems+=gain;S.stats.meteors++;
       fxAt(e.clientX,e.clientY,'💎+'+gain);sGem();sThud();
       el.remove();drawHud();checkAch();save();
@@ -786,7 +954,7 @@ function startSlime(){
   SL.season=seasonActive();
   sShoo();
   toast(S.season
-    ?'🎩 Сезонный слизень в шляпе!\nОн тормозит росток — затапай (3 раза)!\nПервый за месяц даёт редкую награду!'
+    ?(seasonNow()?.em||'🎩')+' Сезонный слизень!\nОн тормозит росток — затапай (3 раза)!\nПервый за месяц даёт редкую награду!'
     :'👾 Космо-слизень пристроился на грядке!\nОн тормозит росток — затапай его (3 раза)!',4500);
   drawCells();
   return true;
@@ -822,7 +990,7 @@ function slimeDroneCheck(){
 setInterval(()=>{
   const pn=performance.now();
   if(document.hidden)return;
-    tickFlareClass();updateJournal();
+  tickFlareClass();updateJournal();checkLetters();
   {const tk=dayKey(new Date());
    if(S.lastSessionDay!==tk){S.sessions=(S.sessions||0)+1;S.lastSessionDay=tk}}
   if(S.mods.hangar&&S.gnow>=S.droneNextG){
@@ -857,7 +1025,7 @@ setInterval(()=>{
       return;
     }
     S.gnow+=Math.min(pdt,1000);
-        S.playMs=Math.min((S.playMs||0)+Math.min(pdt,1000),1e12);
+    S.playMs=Math.min((S.playMs||0)+Math.min(pdt,1000),1e12);
     S.allowance=Math.min(capH()*3600e3,
       S.allowance+Math.min(pdt,1000)*BALANCE.offline.mult);
 
@@ -912,6 +1080,7 @@ setInterval(()=>{
       hideAt=null;lastPn=performance.now();lastWall=NOW();
       DR.nextAt=performance.now()+BALANCE.drift.minGapSec*1000;
       EV.nextPn=Math.max(EV.nextPn,performance.now()+60e3);
+      rollGold();
     }
   });
 })();
@@ -930,21 +1099,38 @@ const cells=[];
     c.innerHTML='<div class="crop"></div><div class="ptxt"></div><div class="pbar" style="display:none"><i></i></div>';
     g.appendChild(c);cells.push(c)}
 })();
-const def=i=>DEF_OF(S.plots[i].cropId);
-const eff=p=>Math.max(0,(S.gnow-p.plantedAt)/1000)+p.boost;
-const prog=p=>p.growT?Math.min(1,eff(p)/p.growT):0;
-const rem=p=>Math.max(0,p.growT-eff(p));
-
-/* ================= ОТРИСОВКА ================= */
 function frontierRow(){
   for(let r=BALANCE.START_CELLS/COLS;r<BALANCE.rows;r++){
     for(let j=r*COLS;j<r*COLS+COLS;j++)if(!owned(j))return r;
   }
   return -1;
 }
+const def=i=>DEF_OF(S.plots[i].cropId);
+const eff=p=>Math.max(0,(S.gnow-p.plantedAt)/1000)+p.boost;
+const prog=p=>p.growT?Math.min(1,eff(p)/p.growT):0;
+const rem=p=>Math.max(0,p.growT-eff(p));
+
+/* ================= ЗОЛОТОЙ РОСТОК ================= */
+function rollGold(){
+  if(S.goldRolled)return;
+  const cand=[];
+  for(let i=0;i<GRID_N;i++){
+    const p=S.plots[i];
+    if(p.cropId&&p.occBy==null&&prog(p)>=1&&!p.gold)cand.push(i);
+  }
+  if(cand.length&&Math.random()<BALANCE.goldChance){
+    S.goldIdx=cand[rnd(0,cand.length-1)];
+    S.plots[S.goldIdx].gold=true;
+    S.goldRolled=true;
+    sPing();drawCells();
+  }
+}
+
+/* ================= ОТРИСОВКА ================= */
 function drawCells(){
   const pn=performance.now();
   const fr=frontierRow();
+  const hat=SL.season?(seasonNow()?.slimeHat||'🎩'):'';
   for(let i=0;i<GRID_N;i++){
     const p=S.plots[i],c=cells[i],
           cr=c.querySelector('.crop'),tx=c.querySelector('.ptxt'),pb=c.querySelector('.pbar');
@@ -971,7 +1157,8 @@ function drawCells(){
             :'⛔ уплыл';
       }
     }
-    if(SL.on&&i===SL.idx){cls+=' slimed';txTxt=(SL.season?'🎩':'')+'👾 '+SL.hp}
+    if(p.gold&&pr>=1){cls+=' gold';crTxt='✨'+crTxt}
+    if(SL.on&&i===SL.idx){cls+=' slimed';txTxt=hat+'👾 '+SL.hp}
     if(DR.on&&(i===DR.idx||S.plots[i].occBy===DR.idx))
       cls+=DR.phase==='drift'?' drift':' adrift';
 
@@ -986,16 +1173,26 @@ function drawCells(){
   }
 }
 function drawHud(){
-  const l=effLvl(),max=l>=CROPS.length;
+  const l=effLvl(),max=l>=CROPS.length,rk=rankOf();
   $('#credits').textContent='¢ '+fmtN(S.credits);
   $('#gems').textContent='💎 '+fmtN(S.gems);
-  $('#lvl').textContent=max?'MAX ✦':'Ур. '+l;
+  $('#lvl').textContent=max?('MAX ✦'+(rk>0?' ★'+rk:'')):'Ур. '+l;
+  $('#subLine').textContent=S.farmName?(S.farmName+' · '+VER_STR):('StarSprout · '+VER_STR);
   const lo=TH[l-1]||0,nx=TH[l];
   $('#xpbar i').style.width=(max||!nx)?'100%':Math.min(100,(S.xp-lo)/(nx-lo)*100)+'%';
 }
 function drawInv(){const en=Object.entries(S.inv).filter(([id,n])=>DEF_OF(id)&&n>0);
   $('#inv').textContent=en.length?en.map(([id,n])=>DEF_OF(id).em+'×'+n).join(' '):'Склад пуст'}
-const drawAll=()=>{drawHud();drawInv();drawCells();updateJournal()};
+function updateDecor(){
+  $('#decor').textContent=DECOR.filter(d=>S.decorOwned.includes(d.id)).map(d=>d.em).join(' ')}
+function drawBoosters(){
+  const b=S.boosters,any=b.thermos>0||b.water>0||b.seed>0;
+  $('#boostBar').style.display=any?'flex':'none';
+  $('#bThermosN').textContent='×'+b.thermos;
+  $('#bWaterN').textContent='×'+b.water;
+  $('#bSeedN').textContent='×'+b.seed;
+}
+const drawAll=()=>{drawHud();drawInv();drawCells();updateJournal();updateDecor();drawBoosters()};
 setInterval(drawCells,250);
 
 /* ================= УРОВНИ / АЧИВКИ / ЕЖЕДНЕВКА ================= */
@@ -1032,12 +1229,23 @@ function checkDaily(){
   const now=new Date(),today=dayKey(now);
   if(S.lastDaily===today)return;
   const yest=dayKey(new Date(now.getFullYear(),now.getMonth(),now.getDate()-1));
+  const missed=S.lastDaily&&S.lastDaily!==yest;
+  if(missed&&S.streak>0&&(S.boosters.thermos>0||S.thermosUsedWeek!==weekKey())){
+    if(S.boosters.thermos>0)S.boosters.thermos--;
+    S.thermosUsedWeek=weekKey();
+    S.streak=S.streak+1;
+    toast('☕ Термос чая ФЛОРЫ сработал!\nПропущенный день прощён — стрик '+S.streak+' сохранён!',6000);
+    S.lastDaily=today;
+    confetti(12);sQuick();
+    checkAch();save();drawHud();return;
+  }
   S.streak=(S.lastDaily===yest)?S.streak+1:1;
   S.lastDaily=today;
+  const x2=seasonNow()?.dailyX2?2:1;
   const r=DAILY[(S.streak-1)%DAILY.length];
-  let msg=`📅 День ${S.streak} подряд!\n`;
-  if(r.c){S.credits+=r.c;msg+=`Подарок: +¢${r.c}`}
-  if(r.g){S.gems+=r.g;msg+=`Подарок: +💎${r.g}`}
+  let msg=`📅 День ${S.streak} подряд!${x2>1?' 🎄×2':''}\n`;
+  if(r.c){const v=r.c*x2;S.credits+=v;msg+=`Подарок: +¢${v}`}
+  if(r.g){const v=r.g*x2;S.gems+=v;msg+=`Подарок: +💎${v}`}
   confetti(16);sQuick();
   toast(msg,5000);
   checkAch();save();drawHud();
@@ -1082,6 +1290,7 @@ function digPlot(m){
   if(SL.on&&SL.idx===m)SL.on=false;
   const back=Math.floor(def(m).cost*BALANCE.digRefund);
   if(back>0)S.credits+=back;
+  if(S.goldIdx===m)S.goldIdx=-1;
   Object.assign(S.plots[m],{...PLOT_DEF});
   S.plots.forEach(o=>{if(o.occBy===m)o.occBy=null});
   sDig();fx(cells[m],'🪴');checkSoftlock();save();drawAll();
@@ -1122,6 +1331,14 @@ function collect(i){
   const d=def(i);
   let num=rnd(d.yMin,d.yMax);
   if(d.dbl&&Math.random()<d.dbl)num*=2;
+  if(d.hybrid&&(S.strains[d.id]?.stars===5)&&Math.random()<.1)num*=2;
+  if(p.gold){
+    const g=rnd(BALANCE.goldGems[0],BALANCE.goldGems[1]);
+    S.gems+=g;S.goldCaught++;S.goldIdx=-1;
+    confetti(20);sFanfare();
+    toast(`✨ Золотой росток!\n+💎${g} — ФЛОРА в восторге!`,4200);
+    p.gold=false;
+  }
   S.inv[d.id]=(S.inv[d.id]||0)+num;
   S.dex[d.id]=(S.dex[d.id]||0)+num;
   if(d.hybrid&&S.dex[d.id]===num){S.gems+=5;sGem();toast('🧬 Новый вид в энциклопедии! +💎5')}
@@ -1210,6 +1427,7 @@ function openSeeds(i){
       <div class="meta"><b>${d.name}</b><br>⏱ ${fmt(d.t)} · 🧺 ${d.yMin}–${d.yMax} шт`+
       (d.cells>1?' · 📏 2 клетки':'')+(d.dbl?` · ✨${Math.round(d.dbl*100)}% x2`:'')+
       (d.hybrid?`<br><small>родители: ${DEF_OF(d.parents[0]).em}+${DEF_OF(d.parents[1]).em}${S.hybrids.includes(d.id)?'':' · не выведен'}</small>`:'')+
+      (S.strains[d.id]?`<br><small>штамм: ${'★'.repeat(S.strains[d.id].stars)} ${(S.strains[d.id].bonus>=0?'+':'')}${Math.round(S.strains[d.id].bonus*100)}%</small>`:'')+
       (locked?`<br>нужен ур. ${d.lvl}`:'')+`</div><div style="font-weight:800;color:var(--accent)">¢${fmtN(d.cost)}</div>`;
     r.onclick=()=>{
       if(d.lvl>effLvl())return fail('🔒 Откроется на уровне '+d.lvl);
@@ -1221,16 +1439,19 @@ function openSeeds(i){
 $('#closeSeeds').onclick=hideSeeds;
 $('#ovlSeeds').addEventListener('click',e=>{if(e.target.id==='ovlSeeds')hideSeeds()});
 
-/* ================= ПРОДАЖА ================= */
+/* ================= ПРОДАЖА (штаммы + ранг) ================= */
 $('#sellBtn').onclick=e=>{
   let tot=0;
   for(const[id,n]of Object.entries(S.inv)){
     const d=DEF_OF(id);
     if(!d){delete S.inv[id];continue}
-    tot+=d.sell*n;delete S.inv[id]}
+    tot+=Math.round(d.sell*n*(1+(d.hybrid?(S.strains[id]?.bonus||0):0)));
+    delete S.inv[id]}
   if(!tot)return fail('Нечего продавать — сначала собери урожай 🧺');
+  const rk=rankOf();
+  if(rk>0)tot=Math.round(tot*(1+rankBonus()));
   S.credits+=tot;S.stats.sold+=tot;
-  sSell();fx(e.currentTarget,'+¢'+fmtN(tot));
+  sSell();fx(e.currentTarget,'+¢'+fmtN(tot)+(rk>0?' ★':''));
   checkAch();checkSoftlock();save();drawAll();
 };
 
@@ -1252,14 +1473,14 @@ function renderOrders(){
   });
 }
 $('#ordBtn').onclick=()=>{
-  if(!S.mods.orders)return fail('Нужен Жилой отсек — построй в 🛰 Станции');
+  if(!S.mods.orders)return fail('Нужен Жилой отсек — построй на 🛰 Станции');
   fillOrders();renderOrders();
   $('#ovlOrders').style.display='flex'};
 const hideOrders=()=>$('#ovlOrders').style.display='none';
 $('#closeOrders').onclick=hideOrders;
 $('#ovlOrders').addEventListener('click',e=>{if(e.target.id==='ovlOrders')hideOrders()});
 
-/* ================= СТАНЦИЯ ================= */
+/* ================= СТАНЦИЯ 2.0 ================= */
 function rowHTML({em,sw,title,sub,right,locked}){
   return `<div class="em">${sw?`<span class="sw" style="background:${sw}"></span>`:em}</div>
     <div class="meta"><b>${title}</b><br>${sub}${locked?`<br>🔒 нужно: ${locked}`:''}</div>
@@ -1279,7 +1500,7 @@ function renderMods(){
         S.credits-=m.cost;S.mods[k]=1;
         if(k==='hangar')S.droneNextG=S.gnow+600e3;
         sBuy();toast(m.em+' Построено: '+m.name+'!');
-        checkAch();save();drawAll();renderMods();
+        checkAch();save();drawAll();renderHub();stGo('mods');
       }};
     box.appendChild(r);
   });
@@ -1290,13 +1511,12 @@ function nikoToday(){
   return NIKO_OFFERS[day%NIKO_OFFERS.length];
 }
 function nikoStr(t){
-  const d=DEF_OF(t.give.id);
   const get=(t.g?'💎'+t.g:'')+(t.g&&t.c?'+':'')+(t.c?'¢'+t.c:'');
-  return `${t.give.n}× ${d.em} → ${get}`;
+  return t.give.map(x=>x.n+'× '+DEF_OF(x.id).em).join(' + ')+' → '+get;
 }
 function renderUpg(){
   const box=$('#tp-upg');box.innerHTML='';
-  {/* реактор */
+  {
     const maxed=S.reactor>=REACTOR_COST.length;
     const cost=maxed?0:REACTOR_COST[S.reactor];
     const r=document.createElement('div');r.className='row';
@@ -1312,7 +1532,7 @@ function renderUpg(){
       }};
     box.appendChild(r);
   }
-  {/* автополив */
+  {
     const r=document.createElement('div');r.className='row';
     r.innerHTML=rowHTML({em:'💧',title:'Автополив',
       sub:S.autoW?'Каждая посадка сразу полита (−25% времени)':
@@ -1327,101 +1547,220 @@ function renderUpg(){
       }};
     box.appendChild(r);
   }
-  {/* призыв события */
-    if(S.mods.observ){
-      const cd=Math.max(0,EV.nextPn-performance.now());
-      const r=document.createElement('div');r.className='row';
-      r.innerHTML=rowHTML({em:'🔭',title:'Призвать событие',
-        sub:'Случайное событие прямо сейчас',
-        right:cd>0?`<small>${fmt(cd/1000)}</small>`:`<button class="btn sm">Позвать</button>`});
-      if(cd<=0)r.onclick=()=>{
-        const ok=fireEvent();
-        EV.nextPn=ok
-          ?performance.now()+rnd(BALANCE.events.minGapSec,BALANCE.events.maxGapSec)*1000*.75
-          :performance.now()+BALANCE.events.evFailCdSec*1000;
-        renderUpg();
-      };
-      box.appendChild(r);
-    }
-  }
-  {/* НИКО */
-    const t=nikoToday(),done=S.nikoLast===dayKey(new Date());
-    const d=DEF_OF(t.give.id),have=S.inv[t.give.id]||0;
+  if(S.mods.observ){
+    const cd=Math.max(0,EV.nextPn-performance.now());
     const r=document.createElement('div');r.className='row';
-    r.innerHTML=rowHTML({em:'🛰',title:'НИКО · станция-сосед',
-      sub:`Меняет ${nikoStr(t)} <small>(есть ${have})</small><br>`+
-          (done?'<small>улетел — вернётся завтра</small>':'<small>предложение дня</small>'),
-      right:done?'✅':'<button class="btn sm">Обменять</button>'});
-    if(!done)r.onclick=()=>{
-      if(have<t.give.n)return fail(`Нужно ${t.give.n}× ${d.em} (есть ${have})`);
-      S.inv[t.give.id]=have-t.give.n;
-      if(S.inv[t.give.id]<=0)delete S.inv[t.give.id];
-      if(t.g)S.gems+=t.g;
-      if(t.c)S.credits+=t.c;
-      S.nikoLast=dayKey(new Date());
-      sBuy();confetti(10);
-      toast('🛰 НИКО: «Отличный товар, сосед!»\nСделка завершена. До завтра!');
-      save();drawAll();renderUpg();
+    r.innerHTML=rowHTML({em:'🔭',title:'Призвать событие',
+      sub:'Случайное событие прямо сейчас',
+      right:cd>0?`<small>${fmt(cd/1000)}</small>`:`<button class="btn sm">Позвать</button>`});
+    if(cd<=0)r.onclick=()=>{
+      const ok=fireEvent();
+      EV.nextPn=ok
+        ?performance.now()+rnd(BALANCE.events.minGapSec,BALANCE.events.maxGapSec)*1000*.75
+        :performance.now()+BALANCE.events.evFailCdSec*1000;
+      renderUpg();
     };
     box.appendChild(r);
   }
 }
-function renderSkins(){
-  const box=$('#tp-skins');box.innerHTML='';
-  SKINS.forEach(sk=>{
-    const ownSk=S.skinsOwned.includes(sk.id),eq=S.skin===sk.id;
-    const r=document.createElement('div');r.className='row click';
-    r.innerHTML=rowHTML({sw:sk.css,title:sk.name,
-      sub:eq?'надет':ownSk?'куплен — тапни, чтобы надеть':
-        sk.special?'🎁 награда за сезонного слизня':'фон станции',
-      right:eq?'✨':ownSk?'<button class="btn sm">Надеть</button>'
-        :sk.special?'🎩':(sk.cost?`<button class="btn sm">💎${sk.cost}</button>`:'')});
-    if(!eq)r.onclick=()=>{
-      if(ownSk){S.skin=sk.id;applySkin();save();renderSkins();return}
-      if(sk.special)return fail('🎩 Скин-награда: поймай сезонного слизня (1–3 числа месяца)!');
-      if(S.gems<sk.cost)return fail('Не хватает 💎');
-      if(confirmP(`Купить скин за 💎${sk.cost}?`)){
-        S.gems-=sk.cost;S.skinsOwned.push(sk.id);S.skin=sk.id;
-        sBuy();applySkin();save();drawHud();renderSkins();
-      }};
-    box.appendChild(r);
-  });
-}
+function renderSys(){renderUpg()}
+
+/* ================= 🧬 ЛАБОРАТОРИЯ + ШТАММЫ ================= */
 function renderLab(){
   const box=$('#tp-lab');box.innerHTML='';
   if(!S.mods.lab){
     box.innerHTML='<p style="text-align:center;opacity:.6;margin-top:16px">🧬 Постройте Лабораторию во вкладке «Модули»</p>';
     return}
+  const dust=document.createElement('div');
+  dust.style.cssText='text-align:center;font-size:12.5px;margin-bottom:8px';
+  dust.innerHTML='🧪 Пыль мутагенов: <b>'+fmtN(S.spore.dust)+'</b> <small>(катализатор реролла — '+BALANCE.catalystCost+')</small>';
+  box.appendChild(dust);
   Object.values(HYBS).forEach(h=>{
     const[a,b]=h.parents,ca=S.inv[a]||0,cb=S.inv[b]||0;
     const done=S.hybrids.includes(h.id),fee=Math.ceil(h.cost*1.5);
-    const r=document.createElement('div');r.className='row'+(done?'':' click');
+    const strain=S.strains[h.id];
+    const r=document.createElement('div');r.className='row click';
     r.innerHTML=`<div class="em">${done?h.em:'❓'}</div>
-      <div class="meta"><b>${done?h.name:'???'}</b><br>
-      ${DEF_OF(a).em}×2 + ${DEF_OF(b).em}×2 <small>(есть ${ca}/2 и ${cb}/2)</small> · взнос ¢${fmtN(fee)}</div>
-      <div style="flex-shrink:0">${done?'✅':'<button class="btn sm">Вывести</button>'}</div>`;
-    if(!done)r.onclick=()=>{
-      const A=S.inv[a]||0,B=S.inv[b]||0;
-      if(A<2||B<2)return fail(`Нужно по 2 родителя: ${DEF_OF(a).em} ${A}/2, ${DEF_OF(b).em} ${B}/2`);
-      if(S.credits<fee)return fail('Не хватает ¢ на взнос ('+fmtN(fee)+')');
-      S.inv[a]-=2;if(S.inv[a]<=0)delete S.inv[a];
-      S.inv[b]-=2;if(S.inv[b]<=0)delete S.inv[b];
-      S.credits-=fee;S.hybrids.push(h.id);
-      sCraft();confetti(12);
-      toast('🧬 Выведен: '+h.name+'!\nСемена доступны в выборе культур');
-      checkAch();save();drawInv();renderLab();
+      <div class="meta"><b>${done?h.name:'???'}</b><br>`+
+      (done
+        ?`штамм: ${'★'.repeat(strain?strain.stars:0)}${strain?' '+((strain.bonus>=0?'+':'')+Math.round(strain.bonus*100)+'%'):' · автосинтез'}`
+        :`${DEF_OF(a).em}×2 + ${DEF_OF(b).em}×2 <small>(есть ${ca}/2 и ${cb}/2)</small> · взнос ¢${fmtN(fee)}`)+
+      `</div>
+      <div style="flex-shrink:0">${done?'<button class="btn sm">🔁</button>':'<button class="btn sm">Вывести</button>'}</div>`;
+    r.onclick=()=>{
+      if(!done){
+        if(ca<2||cb<2)return fail(`Нужно по 2 родителя: ${DEF_OF(a).em} ${ca}/2, ${DEF_OF(b).em} ${cb}/2`);
+        if(S.credits<fee)return fail('Не хватает ¢ на взнос ('+fmtN(fee)+')');
+        labCraftDialog(h);
+      }else{
+        const rrC=fee*0.5;
+        const ov=document.createElement('div');ov.className='ovl';ov.style.display='flex';ov.style.zIndex=45;
+        ov.innerHTML=`<div class="sheet">
+          <h3>🔁 Стабилизировать «${h.name.replace('🧬 ','')}»?</h3>
+          <p style="text-align:center;font-size:12px;opacity:.85;line-height:1.5">
+            Текущий: ${'★'.repeat(strain?strain.stars:0)} ${strain?((strain.bonus>=0?'+':'')+Math.round(strain.bonus*100)+'%'):'0%'}<br>
+            Ослабить нельзя — сохранится лучший результат</p>
+          <div class="row click" id="lrSpiral"><div class="em">🧬</div>
+            <div class="meta"><b>Спираль за ¢${fmtN(rrC)}</b><br>новая попытка стабилизации</div></div>
+          <div class="row click" id="lrCat"><div class="em">🧪</div>
+            <div class="meta"><b>Катализатор (🧪${BALANCE.catalystCost})</b><br>${S.spore.dust<BALANCE.catalystCost?'не хватает пыли':'бесплатно за пыль камеры'}</div></div>
+          <button class="btn sec sm" id="lrX" style="width:100%">Отмена</button>
+        </div>`;
+        document.body.appendChild(ov);
+        ov.addEventListener('click',e=>{if(e.target===ov)ov.remove()});
+        ov.querySelector('#lrX').onclick=()=>ov.remove();
+        const go=pay=>{
+          if(pay==='c'){
+            if(S.credits<rrC)return fail('Не хватает ¢'+fmtN(rrC));
+            if(!confirmP(`Реролл за ¢${fmtN(rrC)}?`))return;
+            S.credits-=rrC;
+          }else{
+            if(S.spore.dust<BALANCE.catalystCost)return fail('Нужно 🧪'+BALANCE.catalystCost+' пыли!');
+            S.spore.dust-=BALANCE.catalystCost;
+          }
+          ov.remove();
+          srOpen(h.id,res=>labFinish(h,res,true));
+        };
+        ov.querySelector('#lrSpiral').onclick=()=>go('c');
+        ov.querySelector('#lrCat').onclick=()=>go('dust');
+      }
     };
     box.appendChild(r);
   });
+}
+function strainStarsTxt(n){return '★'.repeat(n)+'☆'.repeat(5-n)}
+function labCraftDialog(h){
+  const ov=document.createElement('div');ov.className='ovl';ov.style.display='flex';ov.style.zIndex=45;
+  const fee=Math.ceil(h.cost*1.5);
+  ov.innerHTML=`<div class="sheet">
+    <h3>🧬 Вывести «${h.name.replace('🧬 ','')}»?</h3>
+    <div class="row click" id="lcAuto"><div class="em">🔮</div>
+      <div class="meta"><b>Автосинтез</b><br>базовый штамм, 0%, мгновенно</div></div>
+    <div class="row click" id="lcSpiral"><div class="em">🧬</div>
+      <div class="meta"><b>Стабилизация (Спираль)</b><br>штамм по звёздам — до +20% к цене</div></div>
+    <button class="btn sec sm" id="lcCancel" style="width:100%">Отмена</button>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove()});
+  ov.querySelector('#lcCancel').onclick=()=>ov.remove();
+  const payAndCraft=mode=>{
+    S.inv[h.parents[0]]-=2;if(S.inv[h.parents[0]]<=0)delete S.inv[h.parents[0]];
+    S.inv[h.parents[1]]-=2;if(S.inv[h.parents[1]]<=0)delete S.inv[h.parents[1]];
+    S.credits-=fee;
+    ov.remove();
+    if(mode==='auto')labFinish(h,null,false);
+    else srOpen(h.id,res=>labFinish(h,res,false));
+  };
+  ov.querySelector('#lcAuto').onclick=()=>{
+    if(!confirmP(`Автосинтез: базовый штамм 0%.\nРодители и ¢${fmtN(fee)} спишутся. Вывести?`))return;
+    payAndCraft('auto');
+  };
+  ov.querySelector('#lcSpiral').onclick=()=>{
+    if(!confirmP(`Стабилизация: игра «Спираль» определит штамм.\nРодители и ¢${fmtN(fee)} спишутся. Начать?`))return;
+    payAndCraft('spiral');
+  };
+}
+function labFinish(h,res,isReroll){
+  let stars=0,bonus=0;
+  if(res){stars=res.stars;bonus=[0,-.2,-.1,0,.1,.2][stars]}
+  if(isReroll&&S.strains[h.id]){
+    const old=S.strains[h.id];
+    if(stars>old.stars||(stars===old.stars&&bonus>old.bonus))S.strains[h.id]={stars,bonus};
+  }else if(res){
+    S.strains[h.id]={stars,bonus};
+  }
+  if(!S.hybrids.includes(h.id))S.hybrids.push(h.id);
+  sCraft();confetti(12);
+  const fin=S.strains[h.id];
+  toast('🧬 Выведен: '+h.name.replace('🧬 ','')+'!\n'+(fin?strainStarsTxt(fin.stars)+' '+((fin.bonus>=0?'+':'')+Math.round(fin.bonus*100)+'%')+' · ':'')+(TEXTS.spiral[fin?fin.stars:3]||''),5500);
+  checkAch();save();drawInv();
+  if(ST.view==='lab')renderLab();
+}
+
+/* ================= 🛍 ЛАВКА ================= */
+function renderSkinsInto(box){
+  SKINS.forEach(sk=>{
+    const ownSk=S.skinsOwned.includes(sk.id),eq=S.skin===sk.id;
+    const price=sk.cur==='c'?('¢'+fmtN(sk.cost)):(sk.cost?'💎'+sk.cost:'');
+    const r=document.createElement('div');r.className='row click';
+    r.innerHTML=rowHTML({sw:sk.css,title:sk.name,
+      sub:eq?'надет':ownSk?'куплен — тапни, чтобы надеть':
+        sk.special?'🎁 награда за сезонного слизня':
+        sk.seasonal?'🎁 сезонный — активен в свой праздник':
+        (sk.cur==='c'?'премиум за кредиты':'фон станции'),
+      right:eq?'✨':ownSk?'<button class="btn sm">Надеть</button>'
+        :sk.special?'🎩':(sk.seasonal?'🗓':`<button class="btn sm">${price}</button>`)});
+    if(!eq)r.onclick=()=>{
+      if(ownSk){S.skin=sk.id;applySkin();save();renderShop();return}
+      if(sk.special)return fail('🎩 Поймай сезонного слизня (1–3 числа месяца)!');
+      if(sk.seasonal)return fail('🗓 Активируется автоматически в свой сезон!');
+      if(sk.cur==='c'){
+        if(S.credits<sk.cost)return fail('Не хватает кредитов! Нужно ¢'+fmtN(sk.cost));
+        if(confirmP(`Купить скин за ¢${fmtN(sk.cost)}?`)){
+          S.credits-=sk.cost;S.skinsOwned.push(sk.id);S.skin=sk.id;
+          sBuy();applySkin();save();drawAll();renderShop();
+        }
+      }else{
+        if(S.gems<sk.cost)return fail('Не хватает 💎');
+        if(confirmP(`Купить скин за 💎${sk.cost}?`)){
+          S.gems-=sk.cost;S.skinsOwned.push(sk.id);S.skin=sk.id;
+          sBuy();applySkin();save();drawHud();renderShop();
+        }
+      }};
+    box.appendChild(r);
+  });
+}
+function renderShopExtra(){
+  const box=$('#tp-shop');
+  const hr=document.createElement('div');
+  hr.style.cssText='text-align:center;opacity:.55;font-size:11px;font-weight:700;margin:10px 0 6px';
+  hr.textContent='🪧 Имя и декор';box.appendChild(hr);
+  const pl=document.createElement('div');pl.className='row click';
+  pl.innerHTML=rowHTML({em:'🪧',title:'Табличка «Имя фермы»',
+    sub:S.farmName?`«${S.farmName}» — тапни, чтобы переименовать`:'Твоё название в HUD и на открытках',
+    right:S.farmName?'✏️':'<button class="btn sm">¢'+fmtN(PLAQUE_COST)+'</button>'});
+  pl.onclick=()=>{
+    if(!S.farmName){
+      if(S.credits<PLAQUE_COST)return fail('Не хватает кредитов! Нужно ¢'+fmtN(PLAQUE_COST));
+      if(!confirmP(`Купить табличку за ¢${fmtN(PLAQUE_COST)}?`))return;
+      S.credits-=PLAQUE_COST;sBuy();
+    }
+    const nm=(prompt('Название фермы (до 20 символов):')||'').trim().slice(0,20);
+    if(nm){S.farmName=nm;toast('🪧 Ферма названа: «'+nm+'»!');save();drawAll();renderShop()}
+  };
+  box.appendChild(pl);
+  DECOR.forEach(d=>{
+    const ownD=S.decorOwned.includes(d.id);
+    const r=document.createElement('div');r.className='row';
+    r.innerHTML=rowHTML({em:d.em,title:d.name,sub:'декор в углу теплицы',
+      right:ownD?'✅':`<button class="btn sm">¢${fmtN(d.cost)}</button>`});
+    if(!ownD)r.onclick=()=>{
+      if(S.credits<d.cost)return fail('Не хватает кредитов! Нужно ¢'+fmtN(d.cost));
+      if(confirmP(`Купить «${d.name}» за ¢${fmtN(d.cost)}?`)){
+        S.credits-=d.cost;S.decorOwned.push(d.id);
+        sBuy();toast(d.em+' Установлено!');checkAch();save();drawAll();renderShop();
+      }};
+    box.appendChild(r);
+  });
+}
+function renderShop(){
+  const box=$('#tp-shop');box.innerHTML='';
+  const h=document.createElement('div');
+  h.style.cssText='text-align:center;opacity:.55;font-size:11px;font-weight:700;margin:0 0 8px';
+  h.textContent='🖼 Скины купола';box.appendChild(h);
+  renderSkinsInto(box);
+  renderShopExtra();
 }
 function renderDex(){
   const box=$('#tp-dex');box.innerHTML='';
   const all=CROPS.concat(Object.values(HYBS));
   all.forEach(d=>{
     const found=(S.dex[d.id]||0)>0;
+    const strain=d.hybrid?S.strains[d.id]:null;
     const r=document.createElement('div');r.className='row'+(found?'':' locked');
     const sub=d.hybrid
-      ?(found?`гибрид: ${DEF_OF(d.parents[0]).em}+${DEF_OF(d.parents[1]).em}`
+      ?(found?`гибрид: ${DEF_OF(d.parents[0]).em}+${DEF_OF(d.parents[1]).em}`+
+        (strain?` · ${'★'.repeat(strain.stars)} ${((strain.bonus>=0?'+':'')+Math.round(strain.bonus*100)+'%')}`:'')
              :`??? · родители: ${DEF_OF(d.parents[0]).em}+${DEF_OF(d.parents[1]).em}`)
       :'базовая культура';
     r.innerHTML=rowHTML({em:found?d.em:'❓',
@@ -1442,18 +1781,89 @@ function renderAch(){
   });
 }
 function applySkin(){
-  document.body.classList.remove('skin-nebula','skin-emerald','skin-dawn','skin-circus');
+  document.body.classList.remove('skin-nebula','skin-emerald','skin-dawn','skin-circus',
+    'skin-gold','skin-crt','skin-gagarin','skin-pumpkinN');
   if(S.skin!=='default')document.body.classList.add('skin-'+S.skin);
 }
-const ST_TABS={mods:renderMods,upg:renderUpg,lab:renderLab,skins:renderSkins,dex:renderDex,ach:renderAch};
+
+/* ================= ХАБ СТАНЦИИ ================= */
+function popcount(m){let n=0;while(m){n+=m&1;m>>>=1}return n}
+function labBadge(){
+  if(!S.mods.lab)return'';
+  const can=Object.values(HYBS).some(h=>!S.hybrids.includes(h.id)
+    &&(S.inv[h.parents[0]]||0)>=2&&(S.inv[h.parents[1]]||0)>=2
+    &&S.credits>=Math.ceil(h.cost*1.5));
+  return can?'!':'';
+}
+function renderHub(){
+  const hub=$('#stHub');hub.innerHTML='';
+  const modsBought=Object.keys(S.mods).length;
+  const cards=[
+    {id:'mods',em:'🏗',t:'Модули',s:modsBought+'/5 построено',
+     badge:Object.entries(MODS).some(([k,m])=>!S.mods[k]&&effLvl()>=m.lvl&&S.credits>=m.cost)?'!':''},
+    {id:'sys',em:'⚡',t:'Системы',s:'Реактор · Автополив · События',
+     badge:(S.mods.observ&&EV.nextPn<=performance.now())?'!':''},
+    {id:'lab',em:'🧬',t:'Лаба',s:S.mods.lab?(S.hybrids.length+'/15 · 🧪'+S.spore.dust):'Нужна Лаборатория',
+     badge:labBadge()},
+    {id:'spore',em:'🦠',t:'Камера',s:!S.mods.spore?'🔒 ¢800 · ур.4':
+      ('ур.'+S.spore.lvl+' · ★'+Object.values(S.spore.stars).reduce((a,b)=>a+b,0)),
+     badge:(S.mods.spore&&(S.spore.exp.last!==dayKey(new Date())||S.spore.lvl<=24))?'🧪':''},
+    {id:'shop',em:'🛍',t:'Лавка',s:'скины · декор · имя',badge:''},
+    {id:'dex',em:'📚',t:'Архив',s:Object.keys(S.dex).length+'/'+(CROPS.length+Object.keys(HYBS).length)+' · 🏆 '+Object.keys(S.ach).length+'/'+ACH.length,badge:''},
+  ];
+  cards.forEach(c=>{
+    const d=document.createElement('div');d.className='hcard';
+    d.innerHTML=`${c.badge?`<span class="hbadge">${c.badge}</span>`:''}
+      <div class="em">${c.em}</div><div class="t">${c.t}</div><div class="s">${c.s}</div>`;
+    d.onclick=()=>{
+      if(c.id==='spore'){
+        if(!S.mods.spore)return fail('🔒 Постройте Споровую камеру (Модули, ¢800)');
+        spOpen();return;
+      }
+      stGo(c.id);
+    };
+    hub.appendChild(d);
+  });
+  const t=nikoToday(),done=S.nikoLast===dayKey(new Date());
+  const nr=document.createElement('div');nr.className='row click';
+  nr.style.gridColumn='1 / -1';nr.style.marginBottom='0';
+  nr.innerHTML=`<div class="em">🛰</div>
+    <div class="meta"><b>НИКО</b> · ${nikoStr(t)}<br><small>${done?'улетел — вернётся завтра':'предложение дня'}</small></div>
+    <div style="flex-shrink:0">${done?'✅':'<button class="btn sm">Обменять</button>'}</div>`;
+  if(!done)nr.onclick=()=>{
+    for(const x of t.give)if((S.inv[x.id]||0)<x.n)
+      return fail(`Нужно ${x.n}× ${DEF_OF(x.id).em} (есть ${S.inv[x.id]||0})`);
+    t.give.forEach(x=>{S.inv[x.id]-=x.n;if(S.inv[x.id]<=0)delete S.inv[x.id]});
+    if(t.g)S.gems+=t.g;if(t.c)S.credits+=t.c;
+    S.nikoCount=(S.nikoCount||0)+1;S.nikoLast=dayKey(new Date());
+    sBuy();confetti(10);toast('🛰 НИКО: «Отличный товар, сосед!»');
+    checkAch();save();drawAll();renderHub();
+  };
+  hub.appendChild(nr);
+}
+const ST={view:'hub'};
+function stGo(view){
+  ST.view=view;
+  $('#stHub').style.display='none';
+  $('#stView').style.display='block';
+  $('#stBack').style.display='block';
+  document.querySelectorAll('#stView .tabPage').forEach(p=>p.classList.toggle('act',p.id==='tp-'+view));
+  if(view==='mods')renderMods();
+  if(view==='sys'){renderUpg()}
+  if(view==='lab')renderLab();
+  if(view==='shop')renderShop();
+  if(view==='dex'){renderDex();renderAch()}
+}
+function stHome(){
+  ST.view='hub';
+  $('#stView').style.display='none';
+  $('#stBack').style.display='none';
+  $('#stHub').style.display='grid';
+  renderHub();
+}
 function openStation(){
-  document.querySelectorAll('#ovlStation .tab').forEach(t=>{
-    t.onclick=()=>{
-      document.querySelectorAll('#ovlStation .tab').forEach(x=>x.classList.toggle('act',x===t));
-      document.querySelectorAll('#ovlStation .tabPage').forEach(p=>p.classList.toggle('act',p.id==='tp-'+t.dataset.t));
-      ST_TABS[t.dataset.t]();
-    }});
-  renderMods();
+  $('#stBack').onclick=stHome;
+  stHome();
   $('#ovlStation').style.display='flex';
 }
 $('#stBtn').onclick=openStation;
@@ -1468,6 +1878,7 @@ function rrPath(g,x,y,w,h,r){
   g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();
 }
 function openPhoto(){
+  S.photos=(S.photos||0)+1;checkAch();
   const cv=$('#phCanvas');cv.width=720;cv.height=1140;
   const g=cv.getContext('2d');
   const bg=PHOTO_BG[S.skin]||PHOTO_BG.default;
@@ -1480,10 +1891,11 @@ function openPhoto(){
     g.beginPath();g.arc(Math.random()*720,Math.random()*1140,Math.random()*1.8+.4,0,7);g.fill();
   }
   g.globalAlpha=1;g.textAlign='center';
+  const rk=rankOf();
   g.fillStyle='#ffb86b';g.font='800 42px "Segoe UI",sans-serif';
-  g.fillText('🌱 КОСМО-ФЕРМА',360,74);
+  g.fillText(S.farmName?('🌱 '+S.farmName):'🌱 КОСМО-ФЕРМА',360,74);
   g.fillStyle='#fff8ec';g.globalAlpha=.9;g.font='600 24px "Segoe UI",sans-serif';
-  g.fillText(`Ур. ${effLvl()} · ¢${fmtN(S.credits)} · 💎${fmtN(S.gems)}`,360,112);
+  g.fillText(`Ур. ${effLvl()}${rk?' ★'+rk+' '+RANK_NAMES[rk]:''} · ¢${fmtN(S.credits)} · 💎${fmtN(S.gems)}`,360,112);
   g.globalAlpha=1;
   const fr=frontierRow(),CW=150,CH=150,GAP=12,X0=(720-3*CW-2*GAP)/2,Y0=140;
   for(let i=0;i<GRID_N;i++){
@@ -1529,7 +1941,7 @@ $('#phShare').onclick=()=>{
     try{
       const file=new File([b],'kosmoferma.png',{type:'image/png'});
       if(navigator.canShare&&navigator.canShare({files:[file]})){
-        await navigator.share({files:[file],title:'🌱 Космо-Ферма'});
+        await navigator.share({files:[file],title:S.farmName?('🌱 '+S.farmName):'🌱 Космо-Ферма'});
         return;
       }
       throw 0;
@@ -1578,6 +1990,12 @@ const JOURNAL=[
 {id:'hyb3',em:'🔬',name:'Выведи 3 гибрида',txt:'Коллекция растёт, станция гордится.',need:()=>S.hybrids.length>=3,rw:{g:8}},
 {id:'all6',em:'📚',name:'Открой все 6 базовых культур',txt:'Энциклопедия любит полные страницы.',need:()=>BASE_IDS.every(id=>(S.dex[id]||0)>0),rw:{g:10}},
 {id:'full',em:'🏗',name:'Выкупи всю теплицу',txt:'18 клеток — простор! Финальный штрих командира.',need:()=>S.own===ALL_MASK,rw:{g:10}},
+{ch:'Глава 7 · Золотая эпоха'},
+{id:'skin1',em:'🖼',name:'Купи скин за кредиты',txt:'Золото или ретро — вкус хозяина станции.',need:()=>S.skinsOwned.includes('gold')||S.skinsOwned.includes('crt'),rw:{g:5}},
+{id:'niko5',em:'🛰',name:'Соверши 5 сделок с НИКО',txt:'Сосед по орбите ценит постоянных клиентов.',need:()=>(S.nikoCount||0)>=5,rw:{g:5}},
+{id:'rank1',em:'⭐',name:'Получи первый звёздный ранг',txt:'50 000 XP после максимума — и ты Серебряный фермер.',need:()=>rankOf()>=1,rw:{g:10}},
+{id:'hyb10',em:'🔬',name:'Выведи 10 гибридов',txt:'Половина каталога — уже наука.',need:()=>S.hybrids.length>=10,rw:{g:10}},
+{id:'hybA2',em:'🧬',name:'Выведи все 15 гибридов',txt:'Полный каталог. ФЛОРА снимает шляпу. У неё нет шляпы. Но сняла.',need:()=>S.hybrids.length>=15,rw:{g:25}},
 ];
 function curTask(){
   while(S.jq<JOURNAL.length&&JOURNAL[S.jq].ch)S.jq++;
@@ -1631,110 +2049,655 @@ function openJournal(){
 $('#closeJournal').onclick=()=>$('#ovlJournal').style.display='none';
 $('#ovlJournal').addEventListener('click',e=>{if(e.target.id==='ovlJournal')e.currentTarget.style.display='none'});
 
-/* ================= 🦠 СПОРОВАЯ КАМЕРА (грейбокс, только из админки) ===== */
-const SP={N:6,T:4,grid:[],sel:-1,busy:false,score:0,moves:0,GOAL:300,MOVES:20,done:false};
-const SP_EM=['🟣','🟢','🔵','🟡'];
-function spInit(){
-  SP.grid=Array.from({length:SP.N*SP.N},()=>rnd(0,SP.T-1));
+/* ===== МАРКЕР: КОНЕЦ ЧАСТИ 2 — продолжай частью 3 ===== */
+/* ================= НЕДЕЛЬНЫЕ ЗАДАНИЯ + СУНДУКИ ================= */
+const WEEK_POOL=[
+ {id:'h40', em:'🧺',name:'Собери 40 растений',        pts:2,need:()=>st('harvested')>=40},
+ {id:'h100',em:'🌾',name:'Собери 100 растений',       pts:4,need:()=>st('harvested')>=100},
+ {id:'o3',  em:'📦',name:'Выполни 3 заказа',          pts:3,need:()=>st('ordersDone')>=3},
+ {id:'d5',  em:'🌀',name:'5 стыковок',                pts:2,need:()=>st('docked')>=5},
+ {id:'m10', em:'☄️',name:'Сбей 10 метеоритов',        pts:2,need:()=>st('meteors')>=10},
+ {id:'s5k', em:'💰',name:'Продай на 5 000¢',          pts:3,need:()=>st('sold')>=5000},
+ {id:'sl5', em:'👾',name:'Прогони 5 слизней',         pts:2,need:()=>st('slimes')>=5},
+ {id:'w30', em:'💧',name:'Полей 30 ростков',          pts:2,need:()=>st('watered')>=30},
+ {id:'p20', em:'🌱',name:'Посади 20 культур',         pts:2,need:()=>st('planted')>=20},
+ {id:'hy1', em:'🧬',name:'Выведи гибрид',             pts:5,need:()=>S.hybrids.length>=1},
+ {id:'n2',  em:'🛰',name:'2 сделки с НИКО',           pts:3,need:()=>(S.nikoCount||0)>=2},
+ {id:'ph1', em:'📸',name:'Сделай открытку',           pts:2,need:()=>(S.photos||0)>=1},
+ {id:'g3',  em:'✨',name:'Поймай золотой росток',     pts:3,need:()=>(S.goldCaught||0)>=1},
+ {id:'e2',  em:'🧪',name:'2 эксперимента дня',        pts:4,need:()=>(S.expDone||0)>=2},
+];
+const WEEK_CHESTS=[
+ {need:10,em:'🥉',name:'Бронзовый сундук',gems:5,boost:{thermos:1}},
+ {need:20,em:'🥈',name:'Серебряный сундук',gems:10,boost:{water:1}},
+ {need:30,em:'🥇',name:'Золотой сундук',gems:20,boost:{seed:1}},
+];
+function ensureWeek(){
+  const wk=weekKey();
+  if(S.wkTasks.length){
+    const valid=S.wkTasks.filter(id=>WEEK_POOL.some(p=>p.id===id));
+    if(valid.length!==S.wkTasks.length)S.wkTasks=valid;
+  }
+  Object.keys(S.wkProg).forEach(k=>{
+    if(!WEEK_POOL.some(p=>p.id===k))delete S.wkProg[k]});
+  if(S.wkKey===wk&&S.wkTasks.length)return;
+  const d=new Date();
+  const wnum=Math.floor(((d-new Date(d.getFullYear(),0,1))/86400e3+(new Date(d.getFullYear(),0,1).getDay()+6)%7)/7);
+  const pool=[...WEEK_POOL];
+  const tasks=[];
+  let seed=wnum*97+31;
+  const prng=()=>{seed=(seed*1103515245+12345)%2147483648;return seed/2147483648};
+  while(tasks.length<7&&pool.length){
+    tasks.push(pool.splice(Math.floor(prng()*pool.length),1)[0].id);
+  }
+  S.wkKey=wk;S.wkTasks=tasks;S.wkProg={};S.wkOpened={};
+}
+function wkPts(){return S.wkTasks.reduce((a,id)=>{
+  const t=WEEK_POOL.find(p=>p.id===id);
+  return a+(t&&t.need()?t.pts:0)},0)}
+function openWeek(){
+  ensureWeek();
+  const list=$('#wkList');list.innerHTML='';
+  S.wkTasks.forEach(id=>{
+    const t=WEEK_POOL.find(p=>p.id===id);if(!t)return;
+    const done=t.need();
+    const r=document.createElement('div');
+    r.className='row'+(done?' done':'');
+    r.innerHTML=`<div class="em">${done?'✅':t.em}</div>
+      <div class="meta"><b>${t.name}</b></div>
+      <div style="font-weight:800;color:var(--accent);flex-shrink:0">+${t.pts}</div>`;
+    list.appendChild(r);
+  });
+  const pts=wkPts();
+  const ch=$('#wkChests');ch.innerHTML='';
+  WEEK_CHESTS.forEach(c=>{
+    const open=!!S.wkOpened[c.need];
+    const can=pts>=c.need&&!open;
+    const r=document.createElement('div');
+    r.className='row'+(can?' click':'');
+    r.innerHTML=`<div class="em">${open?'✅':(pts>=c.need?c.em:'🔒')}</div>
+      <div class="meta"><b>${c.name}</b> · ${c.need} очков<br>
+      <small>+💎${c.gems} · бустер ${Object.keys(c.boost).map(k=>k==='thermos'?'☕':k==='water'?'💧':'🌟').join('')}</small></div>
+      <div style="font-weight:800;color:var(--accent);flex-shrink:0">${pts}/${c.need}</div>`;
+    if(can)r.onclick=()=>{
+      S.wkOpened[c.need]=1;S.wkOpenedTotal++;
+      S.gems+=c.gems;
+      Object.entries(c.boost).forEach(([k,v])=>{S.boosters[k]=(S.boosters[k]||0)+v});
+      confetti(18);sFanfare();
+      toast(`${c.em} ${c.name} открыт!\n+💎${c.gems} и бустер!`,4500);
+      checkAch();save();drawAll();openWeek();
+    };
+    ch.appendChild(r);
+  });
+  $('#ovlWeek').style.display='flex';
+}
+$('#wkBtn').onclick=openWeek;
+$('#closeWeek').onclick=()=>$('#ovlWeek').style.display='none';
+$('#ovlWeek').addEventListener('click',e=>{if(e.target.id==='ovlWeek')e.currentTarget.style.display='none'});
+
+/* ================= БУСТЕРЫ ================= */
+$('#bThermos').onclick=()=>toast('☕ Термос сработает сам, если пропустишь день.\nОдин пропуск — один термос (или бесплатный раз в неделю).',5000);
+$('#bWater').onclick=()=>{
+  if(S.boosters.water<=0)return;
+  const cand=[];
+  for(let i=0;i<GRID_N;i++){
+    const p=S.plots[i];
+    if(p.cropId&&p.occBy==null&&prog(p)<1&&!p.watered)cand.push(i);
+  }
+  if(!cand.length)return fail('Все растущие уже политы 💧');
+  cand.forEach(i=>{
+    const p=S.plots[i];
+    p.boost+=rem(p)*BALANCE.waterCut;p.watered=true;
+    fx(cells[i],'💧');
+  });
+  S.boosters.water--;sWater();
+  toast('💧 Бустер: полито ростков — '+cand.length);
+  save();drawAll();
+};
+$('#bSeed').onclick=()=>{
+  if(S.boosters.seed<=0)return;
+  const cand=[];
+  for(let i=0;i<GRID_N;i++){
+    const p=S.plots[i];
+    if(p.cropId&&p.occBy==null&&prog(p)<1)cand.push(i);
+  }
+  if(!cand.length)return fail('Нечего зреть — всё уже созрело или пусто');
+  cand.forEach(i=>{
+    const p=S.plots[i];
+    p.plantedAt=S.gnow-p.growT*1000;
+    fx(cells[i],'🌟');
+  });
+  S.boosters.seed--;sFanfare();
+  toast('🌟 Золотое семя: дозрело ростков — '+cand.length);
+  save();drawAll();
+};
+
+/* ================= 🦠 СПОРОВАЯ КАМЕРА =================
+   Сектор 1 «Оранжерея» (1–12) · Сектор 2 «Пустоши» (13–24, гнёзда)
+   Босс 24 «Матка пустошей» · ∞ · пыль · эксперимент дня · архивы */
+const SP_EM=['🥕','🍓','🧅','🌽','🌸','🎃'];
+const SECTOR1=[
+ {id:1, size:6,types:4,moves:24,goals:[{t:'collect',id:0,n:30}],stars:[600,1200,2000]},
+ {id:2, size:6,types:4,moves:22,goals:[{t:'collect',id:0,n:15}],stars:[700,1300,2100]},
+ {id:3, size:6,types:4,moves:22,goals:[{t:'collect',id:1,n:12},{t:'score',n:1500}],stars:[1500,2500,3800]},
+ {id:4, size:6,types:4,moves:20,goals:[{t:'score',n:3000}],stars:[3000,4500,6500]},
+ {id:5, size:6,types:4,moves:24,goals:[{t:'ice',n:'all'}],obst:{ice1:10},stars:[900,1600,2600]},
+ {id:6, size:6,types:4,moves:22,goals:[{t:'ice',n:'all'},{t:'score',n:2000}],obst:{ice1:16},stars:[2000,3200,4800]},
+ {id:7, size:6,types:5,moves:24,goals:[{t:'collect',id:2,n:14}],stars:[1200,2200,3500]},
+ {id:8, size:7,types:5,moves:26,goals:[{t:'capsule',n:2}],obst:{capsule:2},stars:[1400,2400,3800]},
+ {id:9, size:7,types:5,moves:20,goals:[{t:'collect',id:3,n:10}],stars:[1600,2800,4200]},
+ {id:10,size:7,types:5,moves:24,goals:[{t:'slime',n:2}],obst:{slime:2},stars:[1500,2600,4000]},
+ {id:11,size:7,types:5,moves:22,goals:[{t:'ice',n:'all'},{t:'collect',id:-1,n:25}],obst:{ice1:12,ice2:6},stars:[2200,3600,5400]},
+ {id:12,size:7,types:5,moves:26,goals:[{t:'ice',n:'all'},{t:'slime',n:3}],obst:{ice1:14,ice2:8,slime:3},boss:true,stars:[2500,4200,6500]},
+];
+const SECTOR2=[
+ {id:13,size:7,types:5,moves:24,goals:[{t:'score',n:2600}],obst:{ice2:6},stars:[1800,3000,4600]},
+ {id:14,size:7,types:5,moves:22,goals:[{t:'ice',n:'all'}],obst:{ice1:10,ice2:8},stars:[2000,3200,4800]},
+ {id:15,size:7,types:5,moves:24,goals:[{t:'collect',id:4,n:12}],obst:{ice2:6},stars:[1900,3100,4700]},
+ {id:16,size:7,types:5,moves:24,goals:[{t:'nest',n:1}],obst:{nest:1},stars:[2000,3300,5000]},
+ {id:17,size:7,types:5,moves:22,goals:[{t:'slime',n:4}],obst:{nest:1,slime:2},stars:[2200,3500,5300]},
+ {id:18,size:7,types:5,moves:24,goals:[{t:'nest',n:2},{t:'score',n:3000}],obst:{nest:2,ice1:6},stars:[2400,3800,5700]},
+ {id:19,size:7,types:6,moves:24,goals:[{t:'collect',id:5,n:10}],obst:{ice2:8},stars:[2400,3800,5700]},
+ {id:20,size:7,types:6,moves:22,goals:[{t:'ice',n:'all'},{t:'slime',n:3}],obst:{ice1:8,ice2:8,nest:1},stars:[2600,4100,6200]},
+ {id:21,size:7,types:6,moves:24,goals:[{t:'capsule',n:3}],obst:{capsule:3,ice2:4},stars:[2600,4100,6200]},
+ {id:22,size:7,types:6,moves:22,goals:[{t:'nest',n:2},{t:'slime',n:4}],obst:{nest:2,slime:2,ice2:4},stars:[2800,4400,6600]},
+ {id:23,size:7,types:6,moves:24,goals:[{t:'score',n:6000}],obst:{nest:2,ice2:8},stars:[3000,4700,7000]},
+ {id:24,size:7,types:6,moves:26,goals:[{t:'ice',n:'all'},{t:'slime',n:4}],obst:{ice2:8,slime:2},boss:true,nestCenter:true,stars:[3200,5000,7500]},
+];
+const FLORA=TEXTS.flora;
+const STORY=TEXTS.story;
+const SP={lvl:1,N:6,grid:[],sel:-1,busy:false,over:false,score:0,moves:0,combo:1,
+ cfg:null,need:{},collected:{},iceLeft:0,capsLeft:0,slimeLeft:0,nestLeft:0,isExp:false};
+const spCell=t=>({t,ice:0,cap:false,sl:false,nest:false});
+const spV=c=>(c.t>=0&&!c.cap&&!c.sl&&!c.nest)?c.t:-1;
+function spRng(seed){let a=seed>>>0;return function(){
+  a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function spGenCfg(n){
+  if(n<=12)return SECTOR1[n-1];
+  if(n<=24)return SECTOR2[n-13];
+  return{id:n,size:7,types:6,moves:Math.max(16,26-Math.floor(n/12)),
+    goals:[{t:'score',n:2000+(n-24)*900}],
+    obst:[{ice1:8},{ice2:6},{capsule:2,ice1:4},{nest:1,ice2:4}][(n-25)%4],
+    stars:[900+(n-12)*900,1400+(n-12)*1400,2000+(n-12)*2000]};
+}
+function spStart(n,asExp){
+  let cfg,rng=Math.random;
+  if(asExp){
+    const dk=dayKey(new Date());
+    let seed=0;for(const ch of dk)seed=(seed*31+ch.charCodeAt(0))>>>0;
+    rng=spRng(seed);
+    cfg={id:-1,size:7,types:5,moves:22,goals:[{t:'score',n:2500}],
+      obst:[{ice1:8},{ice2:4},{capsule:2}][seed%3],stars:[1200,2200,3400]};
+    SP.isExp=true;
+  }else{
+    cfg=spGenCfg(n);SP.isExp=false;
+  }
+  SP.cfg=cfg;
+  SP.lvl=n;SP.N=cfg.size;SP.sel=-1;SP.busy=false;SP.over=false;
+  SP.score=0;SP.moves=cfg.moves;SP.combo=1;SP.collected={};
+  SP.need={};cfg.goals.forEach(g=>{SP.need[g.t]=g});
+  SP.capsLeft=cfg.obst?.capsule||0;SP.slimeLeft=cfg.obst?.slime||0;
+  const N=SP.N,T=cfg.types;
+  SP.grid=Array.from({length:N*N},()=>spCell(Math.floor(rng()*T)));
   let guard=0;
-  while(spFindMatches().length&&guard++<500)
-    spFindMatches().forEach(i=>{SP.grid[i]=rnd(0,SP.T-1)});
-  SP.sel=-1;SP.score=0;SP.moves=SP.MOVES;SP.done=false;SP.busy=false;
+  while(spMatches().length&&guard++<400)spMatches().forEach(i=>{SP.grid[i].t=Math.floor(rng()*T)});
+  const spots=[...Array(N*N).keys()];
+  for(let i=spots.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[spots[i],spots[j]]=[spots[j],spots[i]]}
+  let si=0;
+  for(let k=0;k<(cfg.obst?.ice2||0);k++){SP.grid[spots[si++]].ice=2}
+  for(let k=0;k<(cfg.obst?.ice1||0);k++){const c=SP.grid[spots[si++]];if(!c.ice)c.ice=1}
+  for(let k=0;k<(cfg.obst?.capsule||0);k++){const c=SP.grid[spots[si++]];c.t=-2;c.cap=true;c.ice=0}
+  for(let k=0;k<(cfg.obst?.slime||0);k++){const c=SP.grid[spots[si++]];if(c.t>=0&&!c.ice&&!c.cap)c.sl=true}
+  for(let k=0;k<(cfg.obst?.nest||0)&&!cfg.nestCenter;k++){
+    const c=SP.grid[spots[si++]];if(c.t>=0&&!c.ice&&!c.cap){c.t=-3;c.nest=true}
+  }
+  if(cfg.nestCenter){ /* босс 24: гнездо в центре, кольцо двойного льда */
+    const ci=Math.floor(N/2)*N+Math.floor(N/2);
+    SP.grid[ci]={t:-3,ice:0,cap:false,sl:false,nest:true};
+    spNeighbors(ci).forEach(j=>{SP.grid[j].ice=2});
+  }
+  SP.iceLeft=SP.grid.reduce((a,c)=>a+(c.ice||0),0);   /* факт вместо расчёта */
+  SP.nestLeft=SP.grid.filter(c=>c.nest).length;
+  if(asExp)toast(FLORA.exp,4200);
+  else if(n===1)toast(FLORA.s1,5200);
+  else if(n===13)toast(FLORA.s2,5200);
+  else if(cfg.boss)toast(SP.lvl===24?FLORA.boss2:FLORA.boss,4800);
+  $('#spMap').style.display='none';$('#spPlay').style.display='block';
   spBuild();spRender();
 }
 function spBuild(){
   const g=$('#spGrid');g.innerHTML='';
+  g.style.gridTemplateColumns=`repeat(${SP.N},1fr)`;
   for(let i=0;i<SP.N*SP.N;i++){
     const c=document.createElement('div');c.className='spC';c.dataset.i=i;
     c.onclick=()=>spTap(i);
     g.appendChild(c);
   }
 }
-function spRender(){
-  const cs=$('#spGrid').children;
-  for(let i=0;i<cs.length;i++){
-    cs[i].textContent=SP_EM[SP.grid[i]];
-    cs[i].classList.toggle('sel',i===SP.sel);
-    cs[i].style.visibility='';
-  }
-  $('#spStats').innerHTML=`Очки: <b>${SP.score}</b> / ${SP.GOAL} · Ходы: <b>${SP.moves}</b>`;
-}
-const spRC=i=>[i%SP.N,Math.floor(i/SP.N)];
-const spAdj=(a,b)=>{const[ax,ay]=spRC(a),[bx,by]=spRC(b);return Math.abs(ax-bx)+Math.abs(ay-by)===1};
-function spFindMatches(){
-  const out=new Set();
-  for(let r=0;r<SP.N;r++){
-    let run=1;
-    for(let c=1;c<=SP.N;c++){
-      const cur=r*SP.N+c;
-      if(c<SP.N&&SP.grid[cur]===SP.grid[cur-1])run++;
-      else{if(run>=3)for(let k=cur-run;k<cur;k++)out.add(k);run=1}
-    }
-  }
-  for(let c=0;c<SP.N;c++){
-    let run=1;
-    for(let r=1;r<=SP.N;r++){
-      const cur=r*SP.N+c;
-      if(r<SP.N&&SP.grid[cur]===SP.grid[cur-SP.N])run++;
-      else{if(run>=3)for(let k=cur-run;k<cur;k+=SP.N)out.add(k);run=1}
-    }
-  }
+function spMatches(){
+  const N=SP.N,out=new Set(),v=i=>spV(SP.grid[i]);
+  for(let r=0;r<N;r++){let run=1;
+    for(let c=1;c<=N;c++){const i=r*N+c;
+      if(c<N&&v(i)>=0&&v(i)===v(i-1))run++;
+      else{if(run>=3)for(let k=i-run;k<i;k++)out.add(k);run=1}}}
+  for(let c=0;c<N;c++){let run=1;
+    for(let r=1;r<=N;r++){const i=r*N+c;
+      if(r<N&&v(i)>=0&&v(i)===v(i-N))run++;
+      else{if(run>=3)for(let k=i-run*N;k<i;k+=N)out.add(k);run=1}}}
   return[...out];
 }
+function spNeighbors(i){
+  const N=SP.N,x=i%N,y=Math.floor(i/N),out=[];
+  if(x>0)out.push(i-1);if(x<N-1)out.push(i+1);
+  if(y>0)out.push(i-N);if(y<N-1)out.push(i+N);
+  return out;
+}
 function spTap(i){
-  if(SP.busy||SP.done)return;
+  if(SP.busy||SP.over)return;
+  const c=SP.grid[i];
+  if(!c||c.cap||c.sl||c.nest||c.t<0)return;
   if(SP.sel<0){SP.sel=i;spRender();return}
   if(SP.sel===i){SP.sel=-1;spRender();return}
-  if(!spAdj(SP.sel,i)){SP.sel=i;spRender();return}
+  const N=SP.N,adj=Math.abs(i%N-SP.sel%N)+Math.abs(Math.floor(i/N)-Math.floor(SP.sel/N))===1;
+  if(!adj){SP.sel=i;spRender();return}
   const a=SP.sel,b=i;
-  [SP.grid[a],SP.grid[b]]=[SP.grid[b],SP.grid[a]];
-  if(!spFindMatches().length){
-    [SP.grid[a],SP.grid[b]]=[SP.grid[b],SP.grid[a]];
+  [SP.grid[a].t,SP.grid[b].t]=[SP.grid[b].t,SP.grid[a].t];
+  if(!spMatches().length){
+    [SP.grid[a].t,SP.grid[b].t]=[SP.grid[b].t,SP.grid[a].t];
     beep(150,.08,'square',.06);
     SP.sel=-1;spRender();return;
   }
-  SP.sel=-1;SP.moves--;SP.busy=true;
+  SP.sel=-1;SP.moves--;SP.busy=true;SP.combo=1;
   beep(520,.07);spRender();
   setTimeout(spCascade,160);
 }
-/* каскады: цепочка шагов на таймерах (очередь, не рекурсия) */
 function spCascade(){
-  const m=spFindMatches();
-  if(!m.length){SP.busy=false;spRender();spCheckEnd();return}
+  const m=spMatches();
+  if(!m.length){SP.busy=false;nestSpawn();spRender();spCheckEnd();return}
+  let pts=0;
   m.forEach(i=>{
-    SP.score+=10;
-    const c=$('#spGrid').children[i];
-    if(c)c.style.visibility='hidden';
+    const c=SP.grid[i];
+    spNeighbors(i).forEach(j=>{const n=SP.grid[j];
+      if(n.cap){n.cap=false;n.t=-1;SP.capsLeft--;pts+=30}
+      if(n.sl){n.sl=false;SP.slimeLeft--;pts+=20}
+      if(n.nest){n.nest=false;n.t=-1;SP.nestLeft--;pts+=40}});
+    if(c.ice>0){c.ice--;SP.iceLeft--;pts+=10}
+    else{SP.collected[c.t]=(SP.collected[c.t]||0)+1;pts+=10;c.t=-1}
   });
-  beep(660+Math.min(SP.score/50,400),.06);
+  SP.score+=pts*SP.combo;SP.combo=Math.min(SP.combo+1,5);
+  beep(600+Math.min(SP.score/40,500),.06);
   spRender();
-  setTimeout(()=>{
-    for(let c=0;c<SP.N;c++){                    /* гравитация + досыпание */
-      let write=SP.N-1;
-      for(let r=SP.N-1;r>=0;r--){
-        const idx=r*SP.N+c;
-        if(!m.includes(idx)){
-          SP.grid[write*SP.N+c]=SP.grid[idx];
-          write--;
-        }
-      }
-      for(;write>=0;write--)SP.grid[write*SP.N+c]=rnd(0,SP.T-1);
+  setTimeout(()=>{spGravity();nestSpawn();spRender();setTimeout(spCascade,170)},170);
+}
+function nestSpawn(){ /* гнёзда плодят слизней после хода (кап активных слизней) */
+  if(!SP.grid.some(c=>c.nest))return;
+  let active=SP.grid.filter(c=>c.sl).length;
+  if(active>=BALANCE.nestSpawnCap)return;
+  SP.grid.forEach((c,i)=>{
+    if(!c.nest||active>=BALANCE.nestSpawnCap)return;
+    const nbs=spNeighbors(i).filter(j=>{const n=SP.grid[j];
+      return n.t>=0&&!n.cap&&!n.nest&&!n.sl&&n.ice===0});
+    if(nbs.length){
+      SP.grid[nbs[rnd(0,nbs.length-1)]].sl=true;
+      SP.slimeLeft++;active++;
+      beep(200,.09,'square',.05);
     }
-    spRender();
-    setTimeout(spCascade,170);
-  },170);
+  });
+}
+function spGravity(){
+  const N=SP.N;
+  for(let x=0;x<N;x++){
+    let w=N-1;
+    for(let y=N-1;y>=0;y--){
+      const i=y*N+x,c=SP.grid[i];
+      if(c.cap||c.nest)continue;
+      while(w>=0&&(SP.grid[w*N+x].cap||SP.grid[w*N+x].nest))w--;
+      if(w>y){SP.grid[w*N+x]=c;SP.grid[y*N+x]=spCell(-1)}
+      w--;
+    }
+  }
+  SP.grid.forEach(c=>{if(!c.cap&&!c.nest&&c.t===-1)c.t=Math.floor(Math.random()*SP.cfg.types)});
+}
+function spGoalsDone(){
+  return Object.values(SP.need).every(g=>{
+    if(g.t==='score')return SP.score>=g.n;
+    if(g.t==='ice')return SP.iceLeft<=0;
+    if(g.t==='capsule')return SP.capsLeft<=0;
+    if(g.t==='slime')return SP.slimeLeft<=0;
+    if(g.t==='nest')return SP.nestLeft<=0;
+    if(g.t==='collect')return g.id===-1
+      ?Object.values(SP.collected).reduce((a,b)=>a+b,0)>=g.n
+      :(SP.collected[g.id]||0)>=g.n;
+    return true});
+}
+function spGoalsText(){
+  return Object.values(SP.need).map(g=>{
+    if(g.t==='score')return `Очки ${Math.min(SP.score,g.n)}/${g.n}`;
+    if(g.t==='ice')return `🧊 ${SP.iceLeft}`;
+    if(g.t==='capsule')return `📦 ${SP.capsLeft}`;
+    if(g.t==='slime')return `👾 ${SP.slimeLeft}`;
+    if(g.t==='nest')return `🪺 ${SP.nestLeft}`;
+    if(g.t==='collect'){
+      const have=g.id===-1?Object.values(SP.collected).reduce((a,b)=>a+b,0):(SP.collected[g.id]||0);
+      return (g.id===-1?'✨':SP_EM[g.id])+` ${Math.min(have,g.n)}/${g.n}`}
+    return''}).join(' · ');
+}
+function spRender(){
+  const cs=$('#spGrid').children;
+  for(let i=0;i<cs.length;i++){
+    const c=SP.grid[i],el=cs[i];
+    el.textContent=c.nest?'🪺':(c.cap?'📦':(SP_EM[c.t]||''));
+    el.style.opacity=(c.cap||c.sl)?'.75':(c.t<0?'.2':'1');
+    el.className='spC'+(i===SP.sel?' sel':'')+(c.ice>0?' ice':'')+(c.cap?' cap':'')+(c.nest?' cap':'')+(c.sl?' sl':'');
+  }
+  $('#spStats').innerHTML=(SP.isExp?'🧪 ЭКСПЕРИМЕНТ ДНЯ · ':'')+
+    `Очки: <b>${SP.score}</b> · Ходы: <b>${SP.moves}</b> · Серия ×${SP.combo}<br>${spGoalsText()}`;
 }
 function spCheckEnd(){
-  if(SP.score>=SP.GOAL){SP.done=true;confetti(20);sFanfare();
-    $('#spStats').innerHTML=`🏆 Пройдено! Очки: ${SP.score} (грейбокс: награды — в v0.6)`}
-  else if(SP.moves<=0){SP.done=true;sErr();
-    $('#spStats').innerHTML=`💀 Ходы кончились. Очки: ${SP.score}/${SP.GOAL} (грейбокс)`}
+  if(SP.over)return;
+  if(spGoalsDone()){
+    SP.over=true;
+    const st=SP.cfg.stars,starn=SP.score>=st[2]?3:SP.score>=st[1]?2:1;
+    let dust=0;
+    if(SP.isExp){
+      const today=dayKey(new Date());
+      if(S.spore.exp.last!==today){
+        const yest=dayKey(new Date(Date.now()-86400e3));
+        S.spore.exp.streak=(S.spore.exp.last===yest)?(S.spore.exp.streak||0)+1:1;
+        S.spore.exp.last=today;
+        S.expDone=(S.expDone||0)+1;
+        S.gems+=BALANCE.expGems;
+        if(S.spore.exp.streak>0&&S.spore.exp.streak%7===0){
+          S.gems+=BALANCE.expStreakBonus;
+        }
+      }
+    }else{
+      const first=!(S.spore.stars[SP.lvl]>0);
+      dust=first?(SP.cfg.boss?BALANCE.dustBoss:rnd(BALANCE.dustFirst[0],BALANCE.dustFirst[1]))
+                :rnd(BALANCE.dustRepeat[0],BALANCE.dustRepeat[1]);
+      S.spore.dust+=dust;
+      S.spore.stars[SP.lvl]=Math.max(S.spore.stars[SP.lvl]||0,starn);
+      if(SP.lvl===S.spore.lvl)S.spore.lvl++;
+    }
+    spShowResult(starn,dust);
+    checkAch();save();
+  }else if(SP.moves<=0){
+    SP.over=true;sErr();
+    toast(FLORA.lose+'\nХоды кончились — попробуй ещё раз',4500);
+    $('#spStats').innerHTML+='<br><b>Ходы кончились. Кнопка «↻ Заново»</b>';
+  }
 }
-$('#spRestart').onclick=spInit;
+function spShowResult(starn,dust){
+  const play=$('#spPlay'),map=$('#spMap');
+  play.style.display='none';
+  const res=document.createElement('div');res.className='spRes';
+  let html='';
+  if(SP.isExp){
+    html='<div style="font-size:15px;font-weight:800">🧪 Эксперимент сдан!</div>'+
+      `<div style="font-size:13px;margin-top:6px">Очки: ${SP.score} · +💎${BALANCE.expGems} · стрик ${S.spore.exp.streak||1}</div>`;
+  }else{
+    html=`<div style="font-size:15px;font-weight:800">Уровень ${SP.lvl} пройден!</div>
+      <div class="spStars">${[1,2,3].map(i=>`<span class="${i<=starn?'on':''}">★</span>`).join('')}</div>
+      <div style="font-size:13px">Очки: ${SP.score}${dust?` · <b style="color:#9fd8ff">+🧪${dust} пыли</b>`:''}<br>
+      <small style="opacity:.75">${FLORA['win'+starn]||FLORA.win}</small></div>`;
+  }
+  html+=`<button class="btn sm" id="spCont" style="margin-top:10px">Продолжить</button>`;
+  res.innerHTML=html;
+  map.parentNode.insertBefore(res,map);
+  if(!SP.isExp)setTimeout(()=>{
+    res.querySelectorAll('.spStars span').forEach((s,i)=>{
+      if(i<starn)setTimeout(()=>{s.classList.add('on');beep(700+i*220,.09)},400+i*450)});
+  },100);
+  res.querySelector('#spCont').onclick=()=>{
+    res.remove();
+    const sid=Object.keys(STORY).find(k=>STORY[k].after===SP.lvl&&!S.storySpore.includes(k));
+    if(sid){showStory(sid);return}
+    spOpen();
+  };
+}
+function showStory(sid){
+  const map=$('#spMap');
+  $('#spPlay').style.display='none';
+  map.style.display='flex';
+  const d=document.createElement('div');d.className='row';
+  d.style.flexDirection='column';d.style.alignItems='stretch';
+  d.innerHTML=`<div style="font-size:13px;font-weight:800;margin-bottom:6px">📜 Запись из архива ФЛОРЫ</div>
+    <div style="font-size:12.5px;line-height:1.55;opacity:.92">${STORY[sid].txt}</div>
+    <button class="btn sm" style="margin-top:10px;align-self:center">Закрыть запись</button>`;
+  map.innerHTML='';map.appendChild(d);
+  $('#spTitle').textContent='Архив ФЛОРЫ';
+  d.querySelector('button').onclick=()=>{
+    S.storySpore.push(sid);save();spOpen();
+  };
+}
+function spOpen(){
+  if(!S.mods.spore)return fail('🔒 Постройте Споровую камеру (Станция → Модули, ¢800)');
+  ensureWeek();
+  const map=$('#spMap');
+  document.querySelectorAll('.spRes').forEach(r=>r.remove());
+  $('#spPlay').style.display='none';map.style.display='flex';
+  const totalStars=Object.values(S.spore.stars).reduce((a,b)=>a+b,0);
+  $('#spTitle').textContent=(S.spore.lvl<=12?TEXTS.sectors.s1:TEXTS.sectors.s2)+` · ★ ${totalStars}/72`;
+  map.innerHTML='';
+  for(let n=1;n<=24;n++){
+    if(n===13){
+      const h=document.createElement('div');
+      h.style.cssText='text-align:center;opacity:.6;font-size:11px;font-weight:700;margin:8px 0 2px';
+      h.textContent='🏜 '+TEXTS.sectors.s2;map.appendChild(h);
+    }
+    const locked=n>S.spore.lvl,stn=S.spore.stars[n]||0;
+    const cfg=n<=12?SECTOR1[n-1]:SECTOR2[n-13];
+    const boss=cfg.boss;
+    const r=document.createElement('div');
+    r.className='row'+(locked?'':' click');
+    r.innerHTML=`<div class="em">${locked?'🔒':boss?'👑':n}</div>
+      <div class="meta"><b>Уровень ${n}${boss?' · «'+(n===24?'Матка пустошей':'Первый синтез')+'»':''}</b><br>
+      ${locked?'пройди предыдущий':'★'.repeat(stn)+'☆'.repeat(3-stn)+' · '+cfg.moves+' ходов'}</div>`;
+    if(!locked)r.onclick=()=>spStart(n);
+    map.appendChild(r);
+  }
+  if(S.spore.lvl>24){
+    const r=document.createElement('div');r.className='row click';
+    r.innerHTML=`<div class="em">🕳</div><div class="meta"><b>${TEXTS.sectors.deep}</b><br>бесконечная генерация</div>`;
+    r.onclick=()=>spStart(25);
+    map.appendChild(r);
+  }
+  const done=S.spore.exp.last===dayKey(new Date());
+  const r=document.createElement('div');r.className='row click';
+  r.innerHTML=`<div class="em">${done?'✅':'🧪'}</div>
+    <div class="meta"><b>Эксперимент дня</b><br>`+
+    (done?`сдан · стрик ${S.spore.exp.streak||0}`:'одинаковый у всех игроков · +💎'+BALANCE.expGems)+`</div>`;
+  if(!done)r.onclick=()=>spStart(0,true);
+  map.appendChild(r);
+  $('#ovlSpore').style.display='flex';
+}
+$('#spMapBtn').onclick=spOpen;
+$('#spRestart').onclick=()=>spStart(SP.lvl,SP.isExp);
 $('#closeSpore').onclick=()=>$('#ovlSpore').style.display='none';
 $('#ovlSpore').addEventListener('click',e=>{if(e.target.id==='ovlSpore')e.currentTarget.style.display='none'});
 
-/* ================= НАСТРОЙКИ + T1: СЕКРЕТ АДМИНКИ ================= */
+/* ================= 📬 ПИСЬМА С ЗЕМЛИ ================= */
+const lettersDay=()=>Math.floor((NOW()-S.firstPlayAt)/86400e3)+1;
+function unreadLetter(){return TEXTS.letters.find(l=>l.day<=lettersDay()&&!S.letters.includes(l.id))||null}
+function checkLetters(){$('#mailBtn').style.display=unreadLetter()?'block':'none'}
+function openMail(){
+  const list=$('#mailList');list.innerHTML='';
+  const arrived=TEXTS.letters.filter(l=>l.day<=lettersDay());
+  if(!arrived.length)list.innerHTML='<p style="text-align:center;opacity:.6;margin-top:12px">Пока тихо. Земля молчит... но ненадолго.</p>';
+  arrived.forEach(l=>{
+    const claimed=S.letters.includes(l.id);
+    const r=document.createElement('div');r.className='row click';
+    r.innerHTML=`<div class="em">${l.em}</div>
+      <div class="meta"><b>${l.from}</b><br><small>${claimed?'прочитано':'НОВОЕ · день '+l.day}</small></div>
+      <div style="flex-shrink:0">${claimed?'✅':'💌'}</div>`;
+    r.onclick=()=>showLetter(l);
+    list.appendChild(r);
+  });
+  $('#ovlMail').style.display='flex';
+}
+function showLetter(l){
+  const list=$('#mailList');list.innerHTML='';
+  const claimed=S.letters.includes(l.id);
+  const d=document.createElement('div');d.className='row';
+  d.style.flexDirection='column';d.style.alignItems='stretch';
+  d.innerHTML=`<div style="font-size:12px;opacity:.7">От: ${l.from}</div>
+    <div style="font-size:14px;font-weight:800;margin:4px 0 8px">${l.title}</div>
+    <div style="font-size:12.5px;line-height:1.6;opacity:.92;white-space:pre-line">${l.txt}</div>
+    ${claimed?'<div style="text-align:center;opacity:.6;margin-top:10px">подарок получен</div>'
+      :'<button class="btn sm" id="mlGift" style="margin-top:10px;align-self:center">💌 Забрать подарок</button>'}`;
+  list.appendChild(d);
+  const b=d.querySelector('#mlGift');
+  if(b)b.onclick=()=>{
+    S.letters.push(l.id);
+    let msg='💌 Письмо прочитано!';
+    if(l.gift.c){S.credits+=l.gift.c;msg+='\n+¢'+fmtN(l.gift.c)}
+    if(l.gift.g){S.gems+=l.gift.g;msg+='\n+💎'+l.gift.g}
+    if(l.gift.boost){S.boosters[l.gift.boost]=(S.boosters[l.gift.boost]||0)+1;
+      msg+='\nБустер: '+(l.gift.boost==='thermos'?'☕':l.gift.boost==='water'?'💧':'🌟')}
+    confetti(14);sQuick();toast(msg,4500);
+    checkAch();save();drawAll();openMail();
+  };
+}
+$('#mailBtn').onclick=openMail;
+$('#closeMail').onclick=()=>$('#ovlMail').style.display='none';
+$('#ovlMail').addEventListener('click',e=>{if(e.target.id==='ovlMail')e.currentTarget.style.display='none'});
+
+/* ===== МАРКЕР: КОНЕЦ ЧАСТИ 3 — продолжай частью 4 ===== */
+/* ================= 🧬 СПИРАЛЬ — мини-игра стабилизации ===== */
+const SPIRAL_ROUNDS=[
+ {deg:90,spd:1.0,red:false},{deg:75,spd:1.3,red:false},{deg:70,spd:1.5,red:true},
+ {deg:55,spd:1.7,red:true},{deg:45,spd:2.0,red:true},{deg:40,spd:2.3,red:true}];
+const SP_BASE_SPD=130;
+const SR={run:false,raf:0,round:0,score:0,ang:0,dir:1,spd:0,greenA:0,greenW:0,redA:-999,redW:0,
+  last:0,missed:false,trav:0,hybId:null,onDone:null};
+const srNorm=a=>{a%=360;if(a<0)a+=360;return a};
+const srRad=a=>a*Math.PI/180;
+const srInArc=(a,c,w)=>{const d=Math.abs(srNorm(a-c+180)-180);return d<=w/2};
+function srOpen(hybId,onDone){
+  SR.hybId=hybId;SR.onDone=onDone;SR.round=0;SR.score=0;SR.run=false;
+  const old=document.getElementById('ovlSpiral');if(old)old.remove();
+  const ov=document.createElement('div');ov.className='ovl';ov.id='ovlSpiral';
+  ov.style.display='flex';ov.style.zIndex=45;
+  ov.innerHTML=`<div class="sheet" style="text-align:center">
+    <h3>🧬 Стабилизация генома</h3>
+    <div id="srHead" style="font-size:13px;margin-bottom:8px">Раунд 1/6 · Очки: 0</div>
+    <canvas id="srCv" style="width:320px;max-width:88vw;aspect-ratio:1;touch-action:manipulation"></canvas>
+    <div id="srMsg" style="min-height:22px;font-size:14px;font-weight:800;margin:6px 0"></div>
+    <button class="btn sec sm" id="srQuit">Сдаться (автосинтез)</button>
+    <p style="opacity:.5;font-size:10.5px;margin-top:6px">Выровняй спираль: зелёное — мутаген, красное — яд</p>
+  </div>`;
+  document.body.appendChild(ov);
+  if(S.sawSpiralTip<2){S.sawSpiralTip++;save()}
+  const cv=ov.querySelector('#srCv'),dpr=Math.min(devicePixelRatio||1,2);
+  cv.width=320*dpr;cv.height=320*dpr;
+  SR.cv=cv;SR.ctx=cv.getContext('2d');SR.ctx.scale(dpr,dpr);
+  ov.addEventListener('click',e=>{if(e.target===ov)srQuit()});
+  ov.querySelector('#srQuit').onclick=srQuit;
+  cv.addEventListener('pointerdown',srTap);
+  srNextRound(true);
+}
+function srQuit(){
+  SR.run=false;cancelAnimationFrame(SR.raf);
+  document.getElementById('ovlSpiral')?.remove();
+  const done=SR.onDone;SR.onDone=null;
+  done&&done(null);
+}
+function srNextRound(first){
+  if(SR.round>=SPIRAL_ROUNDS.length){srFinish();return}
+  const cfg=SPIRAL_ROUNDS[SR.round];
+  SR.spd=SP_BASE_SPD*cfg.spd;
+  SR.greenW=cfg.deg;
+  SR.greenA=srNorm(Math.random()*360);
+  if(cfg.red){
+    SR.redW=cfg.deg*0.8;
+    let off=0;
+    do{off=100+Math.random()*200}while(off+SR.redW/2>355);
+    SR.redA=srNorm(SR.greenA+(Math.random()<.5?off:-off));
+  }else SR.redA=-999;
+  /* старт с противоположной стороны от зелёного */
+  SR.ang=srNorm(SR.greenA+180+(Math.random()-.5)*60);
+  SR.missed=false;SR.lastTapAng=null;SR.trav=0;
+  const head=document.querySelector('#srHead');
+  if(head)head.textContent=`Раунд ${Math.min(SR.round+1,6)}/6 · Очки: ${SR.score}`;
+  beep(600,.05,'sine',.05);beep(900,.05,'sine',.05,.05);
+  SR.last=performance.now();
+  if(!SR.run){SR.run=true;requestAnimationFrame(srLoop)}
+}
+function srLoop(now){
+  if(!SR.run)return;
+  const dt=Math.min((now-SR.last)/1000,.05);SR.last=now;
+  SR.ang=srNorm(SR.ang+SR.spd*dt);
+  SR.trav+=SR.spd*dt;
+  /* авто-мимо: проехал 90° ПОСЛЕ заднего края зелёного (не от центра!) */
+  if(SR.lastTapAng===null&&!SR.missed&&SR.trav>180+SR.greenW/2+90){
+    SR.missed=true;srResolve(-1,'МИМО',false)
+  }
+  srDraw();
+  SR.raf=requestAnimationFrame(srLoop);
+}
+function srDraw(){
+  const g=SR.ctx;if(!g)return;
+  const cx=160,cy=160,R=118;
+  g.clearRect(0,0,320,320);
+  g.beginPath();g.arc(cx,cy,R+16,0,7);g.fillStyle='#1a1433';g.fill();
+  g.lineCap='round';
+  g.beginPath();g.arc(cx,cy,R,0,7);g.lineWidth=26;g.strokeStyle='#2a2450';g.stroke();
+  if(SR.redA>-900){
+    g.beginPath();g.arc(cx,cy,R,srRad(SR.redA-SR.redW/2),srRad(SR.redA+SR.redW/2));
+    g.lineWidth=26;g.strokeStyle='#ff6b8a';g.stroke();
+  }
+  g.beginPath();g.arc(cx,cy,R,srRad(SR.greenA-SR.greenW/2),srRad(SR.greenA+SR.greenW/2));
+  g.lineWidth=26;g.strokeStyle='#7ee8a2';g.shadowColor='#7ee8a2';g.shadowBlur=18;g.stroke();
+  g.shadowBlur=0;
+  for(let i=9;i>=0;i--){
+    const a=srRad(srNorm(SR.ang-i*2.5));
+    g.beginPath();g.arc(cx+Math.cos(a)*R,cy+Math.sin(a)*R,7-i*.55,0,7);
+    g.fillStyle=`rgba(255,184,107,${.5-i*.05})`;g.fill();
+  }
+  g.beginPath();g.arc(cx+Math.cos(srRad(SR.ang))*R,cy+Math.sin(srRad(SR.ang))*R,7,0,7);
+  g.fillStyle='#fff';g.shadowColor='#fff';g.shadowBlur=10;g.fill();g.shadowBlur=0;
+}
+function srTap(){
+  if(!SR.run||SR.lastTapAng!==null||SR.missed)return;
+  SR.lastTapAng=SR.ang;
+  if(SR.redA>-900&&srInArc(SR.ang,SR.redA,SR.redW)){
+    beep(220,.12,'square',.08);beep(233,.12,'square',.08);
+    srResolve(-2,'ЯД! 💀',true);
+  }else if(srInArc(SR.ang,SR.greenA,SR.greenW)){
+    const d=Math.abs(srNorm(SR.ang-SR.greenA+180)-180);
+    if(d<=SR.greenW/6){beep(1320,.08);srResolve(2,'ИДЕАЛЬНО! ✨',true)}
+    else{beep(880,.07);srResolve(1,'ХОРОШО',true)}
+  }else{
+    beep(200,.1,'square',.07);srResolve(-1,'МИМО',false);
+  }
+}
+function srResolve(pts,label){
+  SR.score+=pts;
+  const msg=document.querySelector('#srMsg');
+  if(msg){msg.textContent=label+' '+(pts>0?'+'+pts:pts);
+    msg.style.color=pts>0?'var(--green)':(pts<=-2?'#ff6b8a':'var(--accent)')}
+  const head=document.querySelector('#srHead');
+  if(head)head.textContent=`Раунд ${Math.min(SR.round+1,6)}/6 · Очки: ${SR.score}`;
+  setTimeout(()=>{
+    if(SR.round>=SPIRAL_ROUNDS.length-1){srFinish();return}
+    SR.round++;
+    const msg2=document.querySelector('#srMsg');if(msg2)msg2.textContent='';
+    srNextRound(false);
+  },700);
+}
+function srFinish(){
+  SR.run=false;cancelAnimationFrame(SR.raf);
+  const s=SR.score;
+  document.getElementById('ovlSpiral')?.remove();
+  const done=SR.onDone;SR.onDone=null;
+  /* не играл / ноль очков → автосинтез без штрафа (спека ГД) */
+  if(s<=0){toast('Спираль не стабильна — автосинтез без штрафа',3500);done&&done(null);return}
+  const stars=s>=10?5:s>=8?4:s>=6?3:s>=4?2:1;
+  done&&done({stars,score:s});
+}
+
+/* ================= НАСТРОЙКИ + СЕКРЕТ АДМИНКИ ================= */
 $('#menuBtn').onclick=()=>{
   $('#sndIcon').textContent=S.snd?'🔊':'🔇';
   $('#sndLbl').textContent=S.snd?'включён':'выключен';
@@ -1760,7 +2723,7 @@ $('#verLbl').onclick=()=>{
     toast(on?'🛠 Админ-панель скрыта':'🛠 Админ-панель открыта (7 тапов по версии)');
   }
 };
-const hideSet=()=>{$('#ovlSet').style.display='none';devTaps=0};  /* сброс счётчика */
+const hideSet=()=>{$('#ovlSet').style.display='none';devTaps=0};
 $('#closeSet').onclick=hideSet;
 $('#ovlSet').addEventListener('click',e=>{if(e.target.id==='ovlSet')hideSet()});
 $('#sndRow').onclick=()=>{S.snd=!S.snd;
@@ -1800,20 +2763,29 @@ setInterval(()=>{
 addEventListener('error',e=>{if(e.message)toast('🐞 '+e.message,2500)});
 addEventListener('unhandledrejection',e=>toast('🐞 '+((e.reason&&e.reason.message)||e.reason),2500));
 
-/* ================= АДМИН-ОБРАБОТЧИКИ (кнопки 1-в-1) ================= */
-/* ===== Отчёт для разработчиков (тикет 1) ===== */
+/* ================= Отчёт для разработчиков ================= */
 function popcount(m){let n=0;while(m){n+=m&1;m>>>=1}return n}
 function devReport(){
   const mods=Object.keys(S.mods).join(',')||'—';
   const tasks=JOURNAL.filter(t=>!t.ch).length;
+  const rk=rankOf();
+  ensureWeek();
   const rep=[
     '🌱 КОСМО-ФЕРМА '+VER_STR,
-    'Уровень: '+effLvl()+' (XP '+S.xp+')',
-    '¢'+fmtN(S.credits)+' · 💎'+fmtN(S.gems),
+    'Уровень: '+effLvl()+' (XP '+S.xp+')'+(rk>0?' · ★'+rk+' '+RANK_NAMES[rk]:''),
+    '¢'+fmtN(S.credits)+' · 💎'+fmtN(S.gems)+' · 🧪'+fmtN(S.spore.dust),
     'Клеток: '+popcount(S.own)+'/'+GRID_N+' · Модули: '+mods,
-    'Гибридов: '+S.hybrids.length+'/15 · Журнал: '+(S.jq+1)+'/'+tasks,
+    'Гибридов: '+S.hybrids.length+'/15 · Штаммы: '+Object.keys(S.strains).length+
+      (Object.values(S.strains).some(x=>x.stars===5)?' (есть 5★!)':''),
+    'Камера: ур. '+S.spore.lvl+' · звёзд '+Object.values(S.spore.stars).reduce((a,b)=>a+b,0)+
+      ' · эксп. стрик '+(S.spore.exp.streak||0)+' · архивы: '+(S.storySpore.join(',')||'—'),
+    'Письма: '+(S.letters.join(',')||'—'),
+    'Ритуалы: сундуки '+(S.wkOpenedTotal||0)+' · золотых '+(S.goldCaught||0)+
+      ' · бустеры ☕'+S.boosters.thermos+' 💧'+S.boosters.water+' 🌟'+S.boosters.seed,
+    'Неделя: '+wkPts()+' очков',
     'Дней в игре: '+(S.sessions||1)+' · Время: '+fmt((S.playMs||0)/1000),
     'Стрик: '+S.streak+' · Старт: '+(S.firstPlayAt?new Date(S.firstPlayAt).toLocaleDateString():'—'),
+    'Ферма: '+(S.farmName||'без имени')+' · НИКО: '+(S.nikoCount||0)+' · Открыток: '+(S.photos||0),
     'Статы: '+JSON.stringify(S.stats),
   ].join('\n');
   if(navigator.clipboard&&navigator.clipboard.writeText)
@@ -1822,6 +2794,8 @@ function devReport(){
       .catch(()=>prompt('Скопируй отчёт вручную:',rep));
   else prompt('Скопируй отчёт вручную:',rep);
 }
+
+/* ================= АДМИН-ОБРАБОТЧИКИ ================= */
 $('#admToggle').onclick=()=>{
   const b=$('#admBox');
   b.style.display=b.style.display==='none'?'block':'none';
@@ -1861,28 +2835,58 @@ $('#admBox').addEventListener('click',e=>{
     if(DR.on){DR.last=DR.idx;DR.on=false}
     drawCells();toast(n?('🌱 Дозрело: '+n):'Спелого нет — сначала посади');
   }
+  else if(a==='gold'){
+    const cand=[];
+    for(let i=0;i<GRID_N;i++){
+      const p=S.plots[i];
+      if(p.cropId&&p.occBy==null&&prog(p)>=1)cand.push(i);
+    }
+    if(!cand.length)return toast('✨ Нет зрелых — сначала посади');
+    S.goldRolled=true;S.goldIdx=cand[rnd(0,cand.length-1)];
+    S.plots[S.goldIdx].gold=true;
+    drawCells();toast('✨ Золотой росток появился (тест)');
+  }
+  else if(a==='exp'){spStart(0,true)}
+  else if(a==='mail'){
+    /* тест-кнопка: открывает самое раннее непрочитанное письмо независимо от дня */
+    const l=TEXTS.letters.find(x=>!S.letters.includes(x.id));
+    if(!l)return toast('📬 Все письма прочитаны');
+    showLetter(l);
+    $('#ovlMail').style.display='flex';
+  }
   else if(a==='credits'){S.credits+=500;sSell();fx($('#credits'),'+¢500');drawHud();checkAch()}
   else if(a==='gems'){S.gems+=50;sGem();drawHud();checkAch()}
-  else if(a==='spore'){spInit();$('#ovlSpore').style.display='flex'}
-    else if(a==='report')return devReport();
+  else if(a==='dust'){S.spore.dust+=100;drawHud();toast('🧪 +100 пыли (тест)')}
+  else if(a==='report')return devReport();
   save();
 });
 
-/* ================= T4: PWA SERVICE WORKER ================= */
+/* ================= PWA SERVICE WORKER ================= */
 if('serviceWorker' in navigator
    &&(location.protocol==='https:'||location.hostname==='localhost')){
   addEventListener('load',()=>{
     navigator.serviceWorker.register('./sw.js').catch(()=>{});
   });
 }
+
 /* ================= BOOT ================= */
 EV.nextPn=performance.now()+BALANCE.events.firstDelaySec*1000;
 fillOrders();
 applySkin();
 applyAdminVis();
+ensureWeek();
+{
+  const sn=seasonNow();
+  if(sn&&sn.skin&&!S.skinsOwned.includes(sn.skin)){
+    S.skinsOwned.push(sn.skin);
+    setTimeout(()=>toast(sn.em+' Сезонный подарок: скин «'+SKINS.find(s=>s.id===sn.skin).name+'»!',6000),1500);
+  }
+  if(sn)setTimeout(()=>toast(sn.em+' Идёт событие: '+sn.name+'!',5000),800);
+}
 checkSoftlock();
 drawAll();
 setTimeout(checkDaily,900);
+if(unreadLetter())setTimeout(()=>toast('📬 Тебе письмо с Земли!\nЖми 📮 в углу теплицы',5000),2200);
 </script>
 </body>
 </html>
