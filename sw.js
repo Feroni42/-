@@ -1,6 +1,6 @@
 /* ⚠️ CACHE-версия = бампить КАЖДЫЙ релиз вместе с VER_STR в index.html */
-const CACHE='kosmoferma-v0_5_0';
-const ASSETS=['./','./index.html','./manifest.webmanifest','./icon.svg'];
+const CACHE='kosmoferma-v0_7_0';
+const ASSETS=['./','./index.html','./manifest.webmanifest','./icon.svg','./texts.js'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));
 });
