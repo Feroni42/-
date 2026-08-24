@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>🦠 Споровая камера — грейбокс ядра (lab_proto)</title>
+<style>
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#191333;color:#fff8ec;margin:0;
+    min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:12px;padding:16px;user-select:none;-webkit-user-select:none}
+  h1{font-size:15px;opacity:.8;margin:0;font-weight:600}
+  #hud{display:flex;gap:18px;font-size:14px;background:#2b2440cc;padding:8px 16px;border-radius:12px}
+  #board{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;width:min(92vw,420px);touch-action:none}
+  .c{aspect-ratio:1;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-size:clamp(22px,6vw,32px);cursor:pointer;border:2px solid transparent;background:#ffffff12}
+  .c.sel{border-color:#ffb86b;background:#ffb86b26}
+  .c.hid{visibility:hidden}
+  .c.bad{animation:shk .26s}
+  @keyframes shk{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  #msg{min-height:22px;font-size:14.5px;font-weight:700}
+  button{border:none;border-radius:10px;padding:10px 20px;font-weight:800;cursor:pointer;
+    background:#ffab5e;color:#4a2c00;font-family:inherit;font-size:14px}
+  #note{max-width:430px;font-size:11.5px;opacity:.5;text-align:center;line-height:1.5;margin:0}
+</style>
+</head>
+<body>
+<h1>🦠 Споровая камера · ядро v0.1 (грейбокс)</h1>
+<div id="hud"><span>Очки: <b id="sc">0</b>/300</span><span>Ходы: <b id="mv">20</b></span><span>Серия: <b id="cb">×1</b></span></div>
+<div id="board"></div>
+<div id="msg"></div>
+<button id="rs">↻ Заново</button>
+<p id="note">Свап: потяни спору в сторону или тапни две соседние. Невалидный — откат без траты хода.
+Критерий: «правило вечера» — играет ли человек сам дольше 60 секунд.</p>
+<script>
+'use strict';
+const N=6,T=4,GOAL=300,MOVES=20;
+const EM=['◆','●','▲','■'];
+const BG=['#54517a','#6e6a9c','#8a86b8','#3f3c63'];
+let g=[],sel=-1,busy=false,over=false,score=0,moves=MOVES,combo=1;
+const board=document.getElementById('board'),cells=[];
+const $=q=>document.querySelector(q);
+const ri=()=>Math.floor(Math.random()*T);
+const rc=i=>[i%N,Math.floor(i/N)];
+const adj=(a,b)=>{const[ax,ay]=rc(a),[bx,by]=rc(b);return Math.abs(ax-bx)+Math.abs(ay-by)===1};
+const nb=(i,dx,dy)=>{const[x,y]=rc(i),nx=x+dx,ny=y+dy;
+  return(nx<0||ny<0||nx>=N||ny>=N)?-1:ny*N+nx};
+
+/* ---------- rAF-очередь шагов (никакой рекурсии) ---------- */
+let queue=[],running=false,nextAt=0;
+function enqueue(fn,wait){queue.push({fn,wait});
+  if(!running){running=true;nextAt=performance.now();requestAnimationFrame(loop)}}
+function loop(now){
+  if(!queue.length){running=false;busy=false;render();checkEnd();return}
+  if(now<nextAt){requestAnimationFrame(loop);return}
+  queue.shift().fn();
+  render();
+  nextAt=now+170;
+  requestAnimationFrame(loop);
+}
+
+/* ---------- правила ---------- */
+function findMatches(){
+  const out=new Set();
+  for(let r=0;r<N;r++){let run=1;
+    for(let c=1;c<=N;c++){const i=r*N+c;
+      if(c<N&&g[i]===g[i-1]&&g[i]!==-1)run++;
+      else{if(run>=3)for(let k=i-run;k<i;k++)out.add(k);run=1}}}
+  for(let c=0;c<N;c++){let run=1;
+    for(let r=1;r<=N;r++){const i=r*N+c;
+      if(r<N&&g[i]===g[i-N]&&g[i]!==-1)run++;
+      else{if(run>=3)for(let k=i-run*N;k<i;k+=N)out.add(k);run=1}}}
+  return[...out];
+}
+function hasMove(){
+  for(let i=0;i<N*N;i++)for(const[dx,dy]of[[1,0],[0,1]]){
+    const j=nb(i,dx,dy);if(j<0)continue;
+    [g[i],g[j]]=[g[j],g[i]];
+    const ok=findMatches().length>0;
+    [g[i],g[j]]=[g[j],g[i]];
+    if(ok)return true;
+  }
+  return false;
+}
+function shuffle(){
+  let guard=0;
+  do{for(let i=g.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));
+      [g[i],g[j]]=[g[j],g[i]]}guard++;
+  }while((findMatches().length||!hasMove())&&guard<300);
+}
+function gravity(){
+  for(let x=0;x<N;x++){let w=N-1;
+    for(let y=N-1;y>=0;y--){const i=y*N+x;
+      if(g[i]!==-1){g[w*N+x]=g[i];w--}}
+    for(;w>=0;w--)g[w*N+x]=ri();}
+}
+function stepCascade(){
+  const m=findMatches();
+  if(!m.length)return;                       /* каскад исчерпан — loop завершит сам */
+  const c=combo;
+  enqueue(()=>{m.forEach(i=>{g[i]=-1;score+=10*c})},170);
+  enqueue(()=>{gravity();combo++},170);
+  enqueue(stepCascade,40);
+}
+
+/* ---------- ввод: свайп или тап-тап ---------- */
+let pd=null;
+board.addEventListener('contextmenu',e=>e.preventDefault());
+board.addEventListener('pointerdown',e=>{
+  const c=e.target.closest('.c');if(!c||busy||over)return;
+  pd={i:+c.dataset.i,x:e.clientX,y:e.clientY};
+});
+board.addEventListener('pointerup',e=>{
+  if(!pd||busy||over)return;
+  const i=pd.i,dx=e.clientX-pd.x,dy=e.clientY-pd.y;pd=null;
+  if(Math.hypot(dx,dy)>24){
+    const j=Math.abs(dx)>Math.abs(dy)?nb(i,Math.sign(dx),0):nb(i,0,Math.sign(dy));
+    if(j>=0)trySwap(i,j);
+  }else{
+    if(sel<0){sel=i;render();return}
+    if(sel===i){sel=-1;render();return}
+    if(adj(sel,i))trySwap(sel,i);else{sel=i;render()}
+  }
+});
+function trySwap(a,b){
+  [g[a],g[b]]=[g[b],g[a]];
+  if(!findMatches().length){
+    [g[a],g[b]]=[g[b],g[a]];
+    sel=-1;render();
+    cells[a].classList.add('bad');cells[b].classList.add('bad');
+    setTimeout(()=>{cells[a]&&cells[a].classList.remove('bad');
+      cells[b]&&cells[b].classList.remove('bad')},270);
+    return;
+  }
+  sel=-1;busy=true;moves--;combo=1;render();
+  enqueue(()=>{},120);
+  stepCascade();
+}
+
+/* ---------- отрисовка ---------- */
+function render(){
+  for(let i=0;i<N*N;i++){
+    const c=cells[i];
+    c.textContent=g[i]===-1?'':EM[g[i]];
+    c.style.background=g[i]===-1?'transparent':BG[g[i]];
+    c.style.visibility=g[i]===-1?'hidden':'visible';
+    c.classList.toggle('sel',i===sel);
+  }
+  $('#sc').textContent=score;$('#mv').textContent=moves;$('#cb').textContent='×'+combo;
+}
+function checkEnd(){
+  if(over)return;
+  if(score>=GOAL){over=true;msg('🏆 Пройдено! Ядро затягивает — можно нести арт')}
+  else if(moves<=0){over=true;msg('💀 Ходы кончились · '+score+'/'+GOAL)}
+  else if(!hasMove()){shuffle();msg('Нет ходов — доска перемешана');render()}
+}
+const msg=t=>$('#msg').textContent=t;
+
+/* ---------- старт ---------- */
+function newBoard(){
+  g=Array.from({length:N*N},ri);
+  let guard=0;
+  while(findMatches().length&&guard++<500)findMatches().forEach(i=>g[i]=ri());
+  if(!hasMove())shuffle();
+  sel=-1;busy=false;over=false;score=0;moves=MOVES;combo=1;queue=[];running=false;
+  if(!cells.length)for(let i=0;i<N*N;i++){
+    const d=document.createElement('div');d.className='c';d.dataset.i=i;
+    board.appendChild(d);cells.push(d);}
+  msg('');render();
+}
+$('#rs').onclick=newBoard;
+newBoard();
+</script>
+</body>
+</html>
